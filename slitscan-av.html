@@ -105,6 +105,19 @@ aside {
 .group .label .value { color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
 .group.audio .label .value { color: var(--accent-2); }
 
+.tap-grid {
+  display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr;
+  gap: 4px 8px; align-items: baseline;
+  font-size: 9px; color: var(--dim); letter-spacing: 0.08em;
+}
+.tap-grid .head {
+  color: var(--text); text-transform: uppercase; letter-spacing: 0.14em;
+  border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 3px;
+}
+.tap-grid .feature { color: var(--dim); text-transform: uppercase; }
+.tap-grid .source { color: var(--accent); font-variant-numeric: tabular-nums; }
+.tap-grid .feedback { color: var(--accent-2); font-variant-numeric: tabular-nums; }
+
 .modline {
   display: flex; flex-direction: column; gap: 3px;
   padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);
@@ -291,6 +304,20 @@ input[type=file] { display: none; }
         <div class="group audio">
           <div class="label">Dry / wet <span class="value" id="audioMixVal">1.00</span></div>
           <input type="range" id="audioMix" class="audio" min="0" max="1" step="0.01" value="1">
+        </div>
+      </div>
+
+      <!-- ============= ANALYSIS TAPS ============= -->
+      <div class="section shared">
+        <div class="section-title shared">◇ analysis taps <small>source / feedback</small></div>
+        <div class="tap-grid">
+          <div class="head">feature</div><div class="head">source</div><div class="head">feedback</div>
+          <div class="feature">vis bright</div><div class="source" id="tapVisBrightSource">0.00</div><div class="feedback" id="tapVisBrightFeedback">0.00</div>
+          <div class="feature">vis motion</div><div class="source" id="tapVisMotionSource">0.00</div><div class="feedback" id="tapVisMotionFeedback">0.00</div>
+          <div class="feature">vis hue</div><div class="source" id="tapVisHueSource">0.50</div><div class="feedback" id="tapVisHueFeedback">0.50</div>
+          <div class="feature">aud amp</div><div class="source" id="tapAudAmpSource">0.00</div><div class="feedback" id="tapAudAmpFeedback">0.00</div>
+          <div class="feature">aud centroid</div><div class="source" id="tapAudCentroidSource">0.50</div><div class="feedback" id="tapAudCentroidFeedback">0.50</div>
+          <div class="feature">aud onset</div><div class="source" id="tapAudOnsetSource">0.00</div><div class="feedback" id="tapAudOnsetFeedback">0.00</div>
         </div>
       </div>
 
@@ -552,10 +579,22 @@ const axisVBtn      = document.getElementById('axisV');
    ANALYSIS HUB
    Holds live analyzed values, smoothed, normalized 0..1
    ============================================================ */
-const A = {
-  audio: { amplitude: 0, centroid: 0.5, onset: 0 },
-  visual: { brightness: 0, motion: 0, hue: 0.5 },
+const makeAudioAnalysis = () => ({ amplitude: 0, centroid: 0.5, onset: 0 });
+const makeVisualAnalysis = () => ({ brightness: 0, motion: 0, hue: 0.5 });
+
+const analysisTaps = {
+  source: {
+    audio: makeAudioAnalysis(),
+    visual: makeVisualAnalysis(),
+  },
+  feedback: {
+    audio: makeAudioAnalysis(),
+    visual: makeVisualAnalysis(),
+  },
 };
+
+// Source analysis remains the default modulation feed until a route opts into feedback.
+const A = analysisTaps.source;
 
 const ROUTES = [
   {
@@ -655,8 +694,8 @@ function setRouteDepth(id, value) {
 }
 
 function routeValue(route) {
-  // Feedback taps will branch here once processed-output analyzers exist.
-  return A[route.sourceDomain]?.[route.sourceFeature] ?? 0;
+  const tap = analysisTaps[route.analysisTap] ?? analysisTaps.source;
+  return tap[route.sourceDomain]?.[route.sourceFeature] ?? 0;
 }
 
 /* ============================================================
@@ -670,12 +709,22 @@ const sctx = sourceCanvas.getContext('2d');
 const pctx = previewCanvas.getContext('2d');
 previewCanvas.width = 240; previewCanvas.height = 135;
 
-// small offscreen canvas for visual analysis
+// small offscreen canvases for source and processed-output visual analysis
 const ANA_W = 64, ANA_H = 36;
-const anaCanvas = document.createElement('canvas');
-anaCanvas.width = ANA_W; anaCanvas.height = ANA_H;
-const anaCtx = anaCanvas.getContext('2d', { willReadFrequently: true });
-let anaPrevPixels = null; // for motion calc
+function makeVisualAnalysisBuffer() {
+  const canvas = document.createElement('canvas');
+  canvas.width = ANA_W; canvas.height = ANA_H;
+  return {
+    canvas,
+    ctx: canvas.getContext('2d', { willReadFrequently: true }),
+    prevPixels: null,
+  };
+}
+const visualAnalysisBuffers = {
+  source: makeVisualAnalysisBuffer(),
+  feedback: makeVisualAnalysisBuffer(),
+};
+let visualFeedbackReadWarningShown = false;
 
 let currentScene = 'cars';
 let sceneState = {};
@@ -920,16 +969,10 @@ function clearVisualFeedback() {
 }
 
 /* ============================================================
-   VISUAL ANALYSIS — brightness, motion, hue from source canvas
+   VISUAL ANALYSIS — brightness, motion, hue from source/output taps
    ============================================================ */
-function analyzeVisual() {
-  // Blit current source to small analysis canvas
-  if (useVideoSource && videoEl && videoEl.readyState >= 2) {
-    anaCtx.drawImage(videoEl, 0, 0, ANA_W, ANA_H);
-  } else {
-    anaCtx.drawImage(sourceCanvas, 0, 0, ANA_W, ANA_H);
-  }
-  const img = anaCtx.getImageData(0, 0, ANA_W, ANA_H);
+function analyzeVisualBuffer(buffer, target) {
+  const img = buffer.ctx.getImageData(0, 0, ANA_W, ANA_H);
   const data = img.data;
   const N = ANA_W * ANA_H;
 
@@ -957,10 +1000,10 @@ function analyzeVisual() {
       sumY += Math.sin(ang) * w;
       sumW += w;
     }
-    if (anaPrevPixels) {
-      const dr = r - anaPrevPixels[p] / 255;
-      const dg = g - anaPrevPixels[p+1] / 255;
-      const db = b - anaPrevPixels[p+2] / 255;
+    if (buffer.prevPixels) {
+      const dr = r - buffer.prevPixels[p] / 255;
+      const dg = g - buffer.prevPixels[p+1] / 255;
+      const db = b - buffer.prevPixels[p+2] / 255;
       motion += Math.abs(dr) + Math.abs(dg) + Math.abs(db);
     }
   }
@@ -977,13 +1020,38 @@ function analyzeVisual() {
 
   // smooth (low-pass to avoid jitter — modulation should feel musical, not twitchy)
   const aFast = 0.35, aSlow = 0.15;
-  A.visual.brightness = lerp(A.visual.brightness, newBrightness, aSlow);
-  A.visual.motion     = lerp(A.visual.motion, newMotion, aFast);
-  A.visual.hue        = lerp(A.visual.hue, newHue, aSlow);
+  target.brightness = lerp(target.brightness, newBrightness, aSlow);
+  target.motion     = lerp(target.motion, newMotion, aFast);
+  target.hue        = lerp(target.hue, newHue, aSlow);
 
   // store for next motion calc
-  if (!anaPrevPixels) anaPrevPixels = new Uint8ClampedArray(data.length);
-  anaPrevPixels.set(data);
+  if (!buffer.prevPixels) buffer.prevPixels = new Uint8ClampedArray(data.length);
+  buffer.prevPixels.set(data);
+}
+
+function analyzeVisual() {
+  const buffer = visualAnalysisBuffers.source;
+  // Blit current source to small analysis canvas
+  if (useVideoSource && videoEl && videoEl.readyState >= 2) {
+    buffer.ctx.drawImage(videoEl, 0, 0, ANA_W, ANA_H);
+  } else {
+    buffer.ctx.drawImage(sourceCanvas, 0, 0, ANA_W, ANA_H);
+  }
+  analyzeVisualBuffer(buffer, analysisTaps.source.visual);
+}
+
+function analyzeVisualFeedback() {
+  if (!renderer?.domElement) return;
+  const buffer = visualAnalysisBuffers.feedback;
+  try {
+    buffer.ctx.drawImage(renderer.domElement, 0, 0, ANA_W, ANA_H);
+    analyzeVisualBuffer(buffer, analysisTaps.feedback.visual);
+  } catch (e) {
+    if (!visualFeedbackReadWarningShown) {
+      console.warn('Visual feedback analysis unavailable:', e.message || e.name);
+      visualFeedbackReadWarningShown = true;
+    }
+  }
 }
 
 /* ============================================================
@@ -995,6 +1063,9 @@ let masterGain = null;
 let preAnalyser = null;
 let preAnalyserData = null;
 let preAnalyserPrev = null;
+let postAnalyser = null;
+let postAnalyserData = null;
+let postAnalyserPrev = null;
 let currentSource = null;
 let currentSourceType = 'pad';
 let audioOn = false;
@@ -1037,10 +1108,16 @@ async function startAudio() {
     preAnalyserData = new Uint8Array(preAnalyser.frequencyBinCount);
     preAnalyserPrev = new Uint8Array(preAnalyser.frequencyBinCount);
 
+    postAnalyser = audioCtx.createAnalyser();
+    postAnalyser.fftSize = 1024;
+    postAnalyser.smoothingTimeConstant = 0.4;
+    postAnalyserData = new Uint8Array(postAnalyser.frequencyBinCount);
+    postAnalyserPrev = new Uint8Array(postAnalyser.frequencyBinCount);
+
     masterGain = audioCtx.createGain();
     masterGain.gain.value = parseFloat(audioGain.value);
 
-    workletNode.connect(masterGain).connect(audioCtx.destination);
+    workletNode.connect(postAnalyser).connect(masterGain).connect(audioCtx.destination);
 
     buildSource(currentSourceType);
     pushAudioParams();
@@ -1062,7 +1139,8 @@ async function startAudio() {
 function stopAudio() {
   if (!audioOn) return;
   disposeCurrentSource();
-  if (preAnalyser) { try { preAnalyser.disconnect(); } catch(e){} preAnalyser = null; }
+  if (preAnalyser) { try { preAnalyser.disconnect(); } catch(e){} preAnalyser = null; preAnalyserData = null; preAnalyserPrev = null; }
+  if (postAnalyser) { try { postAnalyser.disconnect(); } catch(e){} postAnalyser = null; postAnalyserData = null; postAnalyserPrev = null; }
   if (workletNode) { try { workletNode.disconnect(); } catch(e){} workletNode = null; }
   if (masterGain) { try { masterGain.disconnect(); } catch(e){} masterGain = null; }
   if (audioCtx) { try { audioCtx.close(); } catch(e){} audioCtx = null; }
@@ -1236,19 +1314,19 @@ function pushAudioParams() {
 /* ============================================================
    AUDIO ANALYSIS — amplitude, centroid, onset (spectral flux)
    ============================================================ */
-function analyzeAudio() {
-  if (!preAnalyser) return;
-  preAnalyser.getByteFrequencyData(preAnalyserData);
-  const N = preAnalyserData.length;
+function analyzeAudioAnalyser(analyser, data, prev, target) {
+  if (!analyser || !data || !prev) return;
+  analyser.getByteFrequencyData(data);
+  const N = data.length;
 
   let sum = 0, weighted = 0, total = 0;
   let flux = 0;
   for (let i = 0; i < N; i++) {
-    const v = preAnalyserData[i] / 255;
+    const v = data[i] / 255;
     sum += v * v;
     weighted += v * i;
     total += v;
-    const dv = v - preAnalyserPrev[i] / 255;
+    const dv = v - prev[i] / 255;
     if (dv > 0) flux += dv;
   }
   const newAmp = Math.sqrt(sum / N);          // RMS-ish (0..1)
@@ -1257,15 +1335,20 @@ function analyzeAudio() {
   // (cheap thresholding — proper onset detection would whiten + adapt)
   const onsetRaw = clamp01((flux - 0.5) * 0.3); // crude but works
 
-  preAnalyserPrev.set(preAnalyserData);
+  prev.set(data);
 
   // smoothing
-  A.audio.amplitude = lerp(A.audio.amplitude, newAmp, 0.3);
-  A.audio.centroid  = lerp(A.audio.centroid, newCentroid, 0.15);
+  target.amplitude = lerp(target.amplitude, newAmp, 0.3);
+  target.centroid  = lerp(target.centroid, newCentroid, 0.15);
   // onset uses a fast attack, slow release
-  A.audio.onset = onsetRaw > A.audio.onset
+  target.onset = onsetRaw > target.onset
     ? onsetRaw
-    : A.audio.onset * 0.85;
+    : target.onset * 0.85;
+}
+
+function analyzeAudio() {
+  analyzeAudioAnalyser(preAnalyser, preAnalyserData, preAnalyserPrev, analysisTaps.source.audio);
+  analyzeAudioAnalyser(postAnalyser, postAnalyserData, postAnalyserPrev, analysisTaps.feedback.audio);
 }
 
 /* ============================================================
@@ -1334,6 +1417,27 @@ function updateMeters() {
   }
 }
 
+function updateTapDebug() {
+  const pairs = [
+    ['tapVisBrightSource', analysisTaps.source.visual.brightness],
+    ['tapVisBrightFeedback', analysisTaps.feedback.visual.brightness],
+    ['tapVisMotionSource', analysisTaps.source.visual.motion],
+    ['tapVisMotionFeedback', analysisTaps.feedback.visual.motion],
+    ['tapVisHueSource', analysisTaps.source.visual.hue],
+    ['tapVisHueFeedback', analysisTaps.feedback.visual.hue],
+    ['tapAudAmpSource', analysisTaps.source.audio.amplitude],
+    ['tapAudAmpFeedback', analysisTaps.feedback.audio.amplitude],
+    ['tapAudCentroidSource', analysisTaps.source.audio.centroid],
+    ['tapAudCentroidFeedback', analysisTaps.feedback.audio.centroid],
+    ['tapAudOnsetSource', analysisTaps.source.audio.onset],
+    ['tapAudOnsetFeedback', analysisTaps.feedback.audio.onset],
+  ];
+  for (const [id, value] of pairs) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value.toFixed(2);
+  }
+}
+
 /* ============================================================
    RENDER LOOP
    ============================================================ */
@@ -1380,11 +1484,16 @@ function loop(now) {
   displayMaterial.uniforms.uTex.value = pingPong[pingIdx].texture;
   renderer.setRenderTarget(null);
   renderer.render(displayScene, quadCamera);
+  analyzeVisualFeedback();
 
   // 5) UI feedback
   if (audioOn) drawSpectro();
   metersFrame++;
-  if (metersFrame >= 3) { metersFrame = 0; updateMeters(); }
+  if (metersFrame >= 3) {
+    metersFrame = 0;
+    updateMeters();
+    updateTapDebug();
+  }
 
   // FPS
   frameCount++;

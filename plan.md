@@ -234,6 +234,8 @@ Deliverables:
 
 ### Phase 1 — Technical cleanup before feedback
 
+Status: in progress. The explicit routing matrix refactor is complete. Source/feedback analysis separation and the debug readout are being implemented as the next foundation step.
+
 Goals:
 
 - Refactor routing logic into a clear data structure.
@@ -255,6 +257,8 @@ Acceptance criteria:
 - No major audio dropouts in Chrome on a desktop/laptop machine.
 
 ### Phase 2 — Processed-output analysis taps
+
+Status: in progress. The current build slice adds simultaneous source and processed-output values while keeping route defaults on source analysis.
 
 Goals:
 
@@ -616,15 +620,16 @@ Mitigation:
 
 ## 10. Immediate next actions
 
-1. Commit the current baseline to GitHub.
-2. Add this `plan.md` and `agent.md`.
-3. Create GitHub issues for Phases 1 to 4.
-4. Refactor routing state into explicit data structures.
-5. Add source vs feedback analysis taps.
-6. Implement the minimal two-routing reciprocal loop.
-7. Add panic, ramp, leak, and feedback depth cap.
-8. Record the first test sessions and begin the findings log.
-9. Start a paper notes document with headings from the proposed NIME structure.
+- [x] Commit the current baseline to GitHub.
+- [x] Add this `plan.md` and `agent.md`.
+- [ ] Create GitHub issues for Phases 1 to 4.
+- [x] Refactor routing state into explicit data structures.
+- [x] Add source vs feedback analysis taps.
+- [ ] Add per-routing source/feedback tap controls.
+- [ ] Implement the minimal two-routing reciprocal loop.
+- [ ] Add panic, ramp, leak, and feedback depth cap.
+- [ ] Record the first test sessions and begin the findings log.
+- [ ] Start a paper notes document with headings from the proposed NIME structure.
 
 ## 11. Definition of done
 
