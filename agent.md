@@ -10,7 +10,7 @@ The GitHub repository for this project is `mtsku11/bidirect-av` at `https://gith
 
 ## 2. Project context
 
-SLITSCAN.AV is a browser-based audiovisual instrument investigating bidirectional cross-modulation, visual slit-scan, spectral slit-scan, cross-modal analysis routing, and reciprocal feedback. The ultimate goal is to build the instrument, test it, gather findings, and prepare a paper or demo submission for NIME.
+SLITSCAN.AV is a browser-based audiovisual instrument investigating bidirectional cross-modulation, visual slit-scan, spectral slit-scan, cross-modal analysis routing, and reciprocal feedback. The ultimate goal is to build the instrument, test it, gather findings, and prepare a paper or demo submission for NIME 2027.
 
 The agent should treat the project as both:
 
@@ -26,11 +26,12 @@ At the start of every new or compacted session, rebuild project context from rep
 Read these files in this order:
 
 1. `agent.md` for operating instructions, permissions, boundaries, and context-loading order.
-2. `README.md` for the current user-facing description, controls, architecture, and known limitations.
-3. `plan.md` for the research direction, development phases, acceptance criteria, and testing protocol.
-4. `TODO.md` for current build status, immediate implementation tasks, and known follow-ups.
-5. `suggested-reading.md` for academic framing and literature-reading priorities.
-6. `slitscan-av.html` for implementation reality before changing code.
+2. `MEMORY.md` for durable project facts that must survive conversation compaction.
+3. `README.md` for the current user-facing description, controls, architecture, and known limitations.
+4. `plan.md` for the research direction, development phases, acceptance criteria, and testing protocol.
+5. `TODO.md` for current build status, immediate implementation tasks, and known follow-ups.
+6. `suggested-reading.md` for academic framing and literature-reading priorities.
+7. `slitscan-av.html` for implementation reality before changing code.
 
 If a conversation decision must survive compaction, record it in the appropriate Markdown file before relying on it. If the Markdown files and implementation disagree, inspect the implementation, preserve user work, and update the relevant documentation as part of the change.
 
@@ -197,7 +198,7 @@ Required or strongly preferred:
 
 - Feedback depth caps.
 - Slow-ramp feedback engagement.
-- Leak/attenuation in feedback paths.
+- Attenuation in feedback paths.
 - Slower smoothing in feedback mode.
 - Panic button.
 - Lockup/runaway indicator.
@@ -272,7 +273,7 @@ The agent should follow this broad sequence unless instructed otherwise:
 2. Refactor routing state.
 3. Add source/feedback analysis taps.
 4. Implement minimal reciprocal feedback pair.
-5. Add damping, ramping, leak, depth caps, and panic controls.
+5. Add damping, ramping, attenuation, depth caps, and panic controls.
 6. Add stability indicators.
 7. Add presets and logging.
 8. Add Playwright smoke tests.

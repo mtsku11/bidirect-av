@@ -2,7 +2,7 @@
 
 ## 1. Project aim
 
-Build, test, document, and write up **SLITSCAN.AV** as a real-time audiovisual instrument for NIME. The instrument explores a dual slit-scan metaphor: visual slit-scan in image space and spectral slit-scan in audio space, connected by explicit cross-modal analysis routings. The core research direction is to move from a reactive audiovisual effect toward a controllable reciprocal-feedback instrument.
+Build, test, document, and write up **SLITSCAN.AV** as a real-time audiovisual instrument for NIME 2027. The instrument explores a dual slit-scan metaphor: visual slit-scan in image space and spectral slit-scan in audio space, connected by explicit cross-modal analysis routings. The core research direction is to move from a reactive audiovisual effect toward a controllable reciprocal-feedback instrument.
 
 The intended NIME contribution is not simply that audio and visuals modulate one another. The stronger contribution is:
 
@@ -148,7 +148,7 @@ Example routing state:
   depth: 0.2,
   analysisTap: 'feedback',
   feedbackRamp: 1.0,
-  feedbackLeak: 0.98,
+  feedbackAttenuation: 0.98,
   smoothingTime: 1.5
 }
 ```
@@ -176,7 +176,7 @@ Required controls:
 - Per-routing depth cap in feedback mode, initially around 0.3.
 - Slow-ramp engagement over approximately 5 seconds when feedback is enabled.
 - Slower smoothing constants for feedback mode than source mode.
-- Feedback leak, initially 0.97 to 0.99.
+- Feedback attenuation, initially 0.97 to 0.99.
 - Panic button that immediately sets all feedback-routing depths to zero.
 - Stability indicator detecting lockup and runaway.
 - Optional freeze button that holds the current feedback state.
@@ -285,14 +285,14 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
-Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, leak, and panic recovery. Full test-session logging is still pending.
+Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, attenuation, stability indication, and panic recovery. The first short test session is logged in `test-sessions/2026-05-07-minimal-loop.md`; longer comparative sessions are still pending.
 
 Goals:
 
 - Implement the first weak bidirectional feedback pair:
   - audio feedback centroid -> visual slit position.
   - visual feedback brightness -> audio gain.
-- Add leak, smoothing, ramping, and feedback depth cap.
+- Add attenuation, smoothing, ramping, and feedback depth cap.
 - Add panic button.
 
 Deliverables:
@@ -435,7 +435,7 @@ NIME context:
 
 - NIME publishes peer-reviewed open-access proceedings.
 - NIME welcomes work on new interfaces for musical expression, including instrument design, performance, and artistic research.
-- NIME 2026 is scheduled for June 23-26, 2026 in London, UK.
+- Current target: NIME 2027 paper/demo submission. Track the official call dates when they are announced and keep the testing/paper schedule aligned to that cycle.
 
 Paper working title options:
 
@@ -539,7 +539,7 @@ Duration:
 - Feedback toggles:
 - Depth values:
 - Smoothing values:
-- Leak values:
+- Attenuation values:
 
 ## Observed behavior
 
@@ -606,7 +606,7 @@ Mitigation:
 
 Mitigation:
 
-- Add ramping, leak, caps, smoothing, freeze, and panic controls early.
+- Add ramping, attenuation, caps, smoothing, freeze, and panic controls early.
 - Build from one bidirectional pair upward.
 - Save stable presets.
 
@@ -629,9 +629,9 @@ Mitigation:
 - [x] Add source vs feedback analysis taps.
 - [x] Add per-routing source/feedback tap controls.
 - [x] Implement the minimal two-routing reciprocal loop.
-- [x] Add panic, ramp, leak, and feedback depth cap.
-- [ ] Add lockup/runaway stability indicator.
-- [ ] Record the first test sessions and begin the findings log.
+- [x] Add panic, ramp, attenuation, and feedback depth cap.
+- [x] Add lockup/runaway stability indicator.
+- [x] Record the first minimal-loop test session and begin the findings log.
 - [ ] Start a paper notes document with headings from the proposed NIME structure.
 
 ## 11. Definition of done

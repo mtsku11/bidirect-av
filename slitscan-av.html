@@ -193,6 +193,19 @@ button.cmd:disabled { opacity: 0.4; cursor: not-allowed; }
   border: 1px dashed rgba(255,255,255,0.08); padding: 7px;
 }
 .safety-status b { color: var(--accent-2); font-weight: normal; }
+.stability-status {
+  font-size: 10px; line-height: 1.5; color: var(--dim);
+  border: 1px solid rgba(255,255,255,0.08); padding: 7px;
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center;
+}
+.stability-status .lamp {
+  width: 9px; height: 9px; background: #444; border: 1px solid rgba(255,255,255,0.2);
+}
+.stability-status.stable .lamp { background: #4fd17a; }
+.stability-status.watch .lamp { background: #ffd166; }
+.stability-status.runaway .lamp { background: #ff5050; }
+.stability-status.lockup .lamp { background: #ff9f1c; }
+.stability-status b { color: var(--text); font-weight: normal; text-transform: uppercase; }
 
 select {
   background: var(--bg); color: var(--text); border: 1px solid var(--border);
@@ -347,7 +360,11 @@ input[type=file] { display: none; }
           <button class="cmd" id="panicBtn">Panic</button>
         </div>
         <div class="safety-status" id="feedbackSafetyStatus">
-          Feedback routes: <b>0</b> · status: source-driven
+          Active feedback routes: <b>0</b> · status: source-driven
+        </div>
+        <div class="stability-status stable" id="stabilityStatus">
+          <span class="lamp"></span>
+          <span><b>stable</b> · waiting for feedback window</span>
         </div>
       </div>
 
@@ -613,6 +630,7 @@ const axisVBtn      = document.getElementById('axisV');
 const minimalLoopBtn = document.getElementById('minimalLoopBtn');
 const panicBtn      = document.getElementById('panicBtn');
 const feedbackSafetyStatus = document.getElementById('feedbackSafetyStatus');
+const stabilityStatus = document.getElementById('stabilityStatus');
 
 /* ============================================================
    ANALYSIS HUB
@@ -637,7 +655,14 @@ const A = analysisTaps.source;
 
 const FEEDBACK_DEPTH_CAP = 0.3;
 const FEEDBACK_RAMP_SECONDS = 5;
-const FEEDBACK_LEAK = 0.98;
+const FEEDBACK_ATTENUATION = 0.98;
+const MAX_MODULATED_SCAN_SPEED = 6;
+const STABILITY_WINDOW_SECONDS = 2;
+const STABILITY_MIN_WINDOW_SECONDS = 1.5;
+const LOCKUP_VARIANCE_THRESHOLD = 0.0005;
+const LOCKUP_RANGE_THRESHOLD = 0.04;
+const RUNAWAY_LOW_THRESHOLD = 0.03;
+const RUNAWAY_HIGH_THRESHOLD = 0.97;
 
 const ROUTES = [
   {
@@ -745,6 +770,12 @@ const ROUTES = [
 ];
 
 const routesById = Object.fromEntries(ROUTES.map(route => [route.id, route]));
+const stabilityState = {
+  status: 'stable',
+  detail: 'waiting for feedback window',
+  routeId: null,
+  routeLabel: null,
+};
 
 // helpers
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -793,28 +824,98 @@ function routeValue(route) {
   return route.feedbackValue;
 }
 
-function leakFeedbackValue(route, value) {
+function attenuateFeedbackValue(route, value) {
   if (route.sourceFeature === 'centroid' || route.sourceFeature === 'hue') {
-    return 0.5 + (value - 0.5) * FEEDBACK_LEAK;
+    return 0.5 + (value - 0.5) * FEEDBACK_ATTENUATION;
   }
-  return value * FEEDBACK_LEAK;
+  return value * FEEDBACK_ATTENUATION;
 }
 
 function updateFeedbackRouteValues() {
   for (const route of ROUTES) {
     if (route.analysisTap !== 'feedback') continue;
     const raw = routeValueRaw(route, 'feedback');
-    route.feedbackValue = leakFeedbackValue(route, raw);
+    route.feedbackValue = attenuateFeedbackValue(route, raw);
   }
 }
 
 function updateFeedbackRamps(dt) {
   const step = dt / FEEDBACK_RAMP_SECONDS;
   for (const route of ROUTES) {
-    const target = route.analysisTap === 'feedback' ? 1 : 0;
+    const target = route.analysisTap === 'feedback' && route.depth > 0 ? 1 : 0;
     if (route.feedbackRamp < target) route.feedbackRamp = Math.min(target, route.feedbackRamp + step);
     else if (route.feedbackRamp > target) route.feedbackRamp = Math.max(target, route.feedbackRamp - step);
   }
+}
+
+function routeLabel(route) {
+  return `${route.sourceFeature} to ${route.targetParam}`;
+}
+
+function updateStabilityIndicator(nowSeconds) {
+  const activeRoutes = ROUTES.filter(route => route.analysisTap === 'feedback' && routeDepth(route.id) > 0.01);
+
+  for (const route of ROUTES) {
+    if (!route.stabilitySamples) route.stabilitySamples = [];
+    if (!activeRoutes.includes(route)) {
+      route.stabilitySamples.length = 0;
+      continue;
+    }
+    route.stabilitySamples.push({ time: nowSeconds, value: routeValue(route) });
+    while (route.stabilitySamples.length && nowSeconds - route.stabilitySamples[0].time > STABILITY_WINDOW_SECONDS) {
+      route.stabilitySamples.shift();
+    }
+  }
+
+  if (!activeRoutes.length) {
+    stabilityState.status = 'stable';
+    stabilityState.detail = 'source-driven';
+    stabilityState.routeId = null;
+    stabilityState.routeLabel = null;
+    return;
+  }
+
+  let watchDetail = 'gathering feedback window';
+  for (const route of activeRoutes) {
+    const samples = route.stabilitySamples || [];
+    if (samples.length < 2) continue;
+    const span = samples[samples.length - 1].time - samples[0].time;
+    if (span < STABILITY_MIN_WINDOW_SECONDS) continue;
+
+    let min = 1, max = 0, sum = 0;
+    for (const sample of samples) {
+      min = Math.min(min, sample.value);
+      max = Math.max(max, sample.value);
+      sum += sample.value;
+    }
+    const mean = sum / samples.length;
+    let variance = 0;
+    for (const sample of samples) variance += (sample.value - mean) ** 2;
+    variance /= samples.length;
+    const range = max - min;
+    const label = routeLabel(route);
+
+    if ((mean <= RUNAWAY_LOW_THRESHOLD || mean >= RUNAWAY_HIGH_THRESHOLD) && range < LOCKUP_RANGE_THRESHOLD) {
+      stabilityState.status = 'runaway';
+      stabilityState.detail = `pegged ${mean.toFixed(2)} on ${label}`;
+      stabilityState.routeId = route.id;
+      stabilityState.routeLabel = label;
+      return;
+    }
+    if (variance < LOCKUP_VARIANCE_THRESHOLD && range < LOCKUP_RANGE_THRESHOLD) {
+      stabilityState.status = 'lockup';
+      stabilityState.detail = `flat ${mean.toFixed(2)} on ${label}`;
+      stabilityState.routeId = route.id;
+      stabilityState.routeLabel = label;
+      return;
+    }
+    watchDetail = `window ${span.toFixed(1)}s · range ${range.toFixed(2)}`;
+  }
+
+  stabilityState.status = 'stable';
+  stabilityState.detail = watchDetail;
+  stabilityState.routeId = null;
+  stabilityState.routeLabel = null;
 }
 
 /* ============================================================
@@ -1090,7 +1191,7 @@ function clearVisualFeedback() {
 /* ============================================================
    VISUAL ANALYSIS — brightness, motion, hue from source/output taps
    ============================================================ */
-function analyzeVisualBuffer(buffer, target) {
+function analyzeVisualBuffer(buffer, target, tapName = 'source') {
   const img = buffer.ctx.getImageData(0, 0, ANA_W, ANA_H);
   const data = img.data;
   const N = ANA_W * ANA_H;
@@ -1137,8 +1238,10 @@ function analyzeVisualBuffer(buffer, target) {
   // motion normalisation: typical max sum ~ N*3 for full white-to-black flips → normalize
   const newMotion = clamp01(motion / (N * 0.6));
 
-  // smooth (low-pass to avoid jitter — modulation should feel musical, not twitchy)
-  const aFast = 0.35, aSlow = 0.15;
+  // Feedback taps get extra damping because they can re-enter the system.
+  const isFeedback = tapName === 'feedback';
+  const aFast = isFeedback ? 0.18 : 0.35;
+  const aSlow = isFeedback ? 0.08 : 0.15;
   target.brightness = lerp(target.brightness, newBrightness, aSlow);
   target.motion     = lerp(target.motion, newMotion, aFast);
   target.hue        = lerp(target.hue, newHue, aSlow);
@@ -1156,7 +1259,7 @@ function analyzeVisual() {
   } else {
     buffer.ctx.drawImage(sourceCanvas, 0, 0, ANA_W, ANA_H);
   }
-  analyzeVisualBuffer(buffer, analysisTaps.source.visual);
+  analyzeVisualBuffer(buffer, analysisTaps.source.visual, 'source');
 }
 
 function analyzeVisualFeedback() {
@@ -1164,7 +1267,7 @@ function analyzeVisualFeedback() {
   const buffer = visualAnalysisBuffers.feedback;
   try {
     buffer.ctx.drawImage(renderer.domElement, 0, 0, ANA_W, ANA_H);
-    analyzeVisualBuffer(buffer, analysisTaps.feedback.visual);
+    analyzeVisualBuffer(buffer, analysisTaps.feedback.visual, 'feedback');
   } catch (e) {
     if (!visualFeedbackReadWarningShown) {
       console.warn('Visual feedback analysis unavailable:', e.message || e.name);
@@ -1383,15 +1486,15 @@ function buildSource(kind) {
     audioFileEl = document.createElement('audio');
     audioFileEl.src = URL.createObjectURL(audioFile);
     audioFileEl.loop = true;
-    audioFileEl.play().catch(err => {
-      errorBox.style.display = 'block';
-      errorBox.textContent = 'Audio file playback error: ' + err.message;
-    });
     const node = audioCtx.createMediaElementSource(audioFileEl);
     const out = headGain; out.gain.value = 0.8;
     node.connect(out);
     currentSource = out;
     currentSource._cleanup = () => { try { node.disconnect(); } catch(e){} };
+    audioFileEl.play().catch(err => {
+      errorBox.style.display = 'block';
+      errorBox.textContent = 'Audio file playback error: ' + err.message;
+    });
   }
 }
 
@@ -1411,7 +1514,7 @@ function pushAudioParams() {
 
   // visual motion adds to scan speed
   const motionAdd = motion * 3.0 * routeDepth('visMotionToAudSpeed'); // up to +3
-  const audioScan = baseScan + motionAdd;
+  const audioScan = Math.min(MAX_MODULATED_SCAN_SPEED, baseScan + motionAdd);
 
   const cBin = sliderToBin(audioCenter, audioCtx.sampleRate);
   const halfBins = Math.max(1, Math.round(baseW * NUM_BINS / 2));
@@ -1436,7 +1539,7 @@ function pushAudioParams() {
 /* ============================================================
    AUDIO ANALYSIS — amplitude, centroid, onset (spectral flux)
    ============================================================ */
-function analyzeAudioAnalyser(analyser, data, prev, target) {
+function analyzeAudioAnalyser(analyser, data, prev, target, tapName = 'source') {
   if (!analyser || !data || !prev) return;
   analyser.getByteFrequencyData(data);
   const N = data.length;
@@ -1459,18 +1562,21 @@ function analyzeAudioAnalyser(analyser, data, prev, target) {
 
   prev.set(data);
 
-  // smoothing
-  target.amplitude = lerp(target.amplitude, newAmp, 0.3);
-  target.centroid  = lerp(target.centroid, newCentroid, 0.15);
+  const isFeedback = tapName === 'feedback';
+  const ampSmooth = isFeedback ? 0.14 : 0.3;
+  const centroidSmooth = isFeedback ? 0.07 : 0.15;
+  const onsetRelease = isFeedback ? 0.92 : 0.85;
+  target.amplitude = lerp(target.amplitude, newAmp, ampSmooth);
+  target.centroid  = lerp(target.centroid, newCentroid, centroidSmooth);
   // onset uses a fast attack, slow release
   target.onset = onsetRaw > target.onset
     ? onsetRaw
-    : target.onset * 0.85;
+    : target.onset * onsetRelease;
 }
 
 function analyzeAudio() {
-  analyzeAudioAnalyser(preAnalyser, preAnalyserData, preAnalyserPrev, analysisTaps.source.audio);
-  analyzeAudioAnalyser(postAnalyser, postAnalyserData, postAnalyserPrev, analysisTaps.feedback.audio);
+  analyzeAudioAnalyser(preAnalyser, preAnalyserData, preAnalyserPrev, analysisTaps.source.audio, 'source');
+  analyzeAudioAnalyser(postAnalyser, postAnalyserData, postAnalyserPrev, analysisTaps.feedback.audio, 'feedback');
 }
 
 /* ============================================================
@@ -1490,7 +1596,7 @@ function computeVisualParams() {
 
   // audio amplitude adds to scan speed
   const ampAdd = amplitude * 3.0 * routeDepth('audAmpToVisSpeed'); // up to +3
-  const visScan = baseScan + ampAdd;
+  const visScan = Math.min(MAX_MODULATED_SCAN_SPEED, baseScan + ampAdd);
 
   // onset triggers clear
   const clearAmount = onset * routeDepth('audOnsetToVisClear');
@@ -1589,6 +1695,7 @@ function loop(now) {
   if (audioOn) analyzeAudio();
   updateFeedbackRamps(dt);
   updateFeedbackRouteValues();
+  updateStabilityIndicator(elapsed);
 
   // 3) Apply modulations to params
   const { visCenter, visW, visScan, clearAmount } = computeVisualParams();
@@ -1717,12 +1824,16 @@ const updateLabels = () => {
       : 'src';
     const modline = depthControl?.closest('.modline');
     if (modline) modline.classList.toggle('feedback', route.analysisTap === 'feedback');
-    if (route.analysisTap === 'feedback') feedbackCount++;
+    if (route.analysisTap === 'feedback' && route.depth > 0) feedbackCount++;
   }
   if (feedbackSafetyStatus) {
     feedbackSafetyStatus.innerHTML = feedbackCount
-      ? `Feedback routes: <b>${feedbackCount}</b> · cap ${FEEDBACK_DEPTH_CAP.toFixed(2)} · leak ${FEEDBACK_LEAK.toFixed(2)} · ramp ${FEEDBACK_RAMP_SECONDS}s`
-      : 'Feedback routes: <b>0</b> · status: source-driven';
+      ? `Active feedback routes: <b>${feedbackCount}</b> · cap ${FEEDBACK_DEPTH_CAP.toFixed(2)} · attenuation ${FEEDBACK_ATTENUATION.toFixed(2)} · ramp ${FEEDBACK_RAMP_SECONDS}s`
+      : 'Active feedback routes: <b>0</b> · status: source-driven';
+  }
+  if (stabilityStatus) {
+    stabilityStatus.className = `stability-status ${stabilityState.status}`;
+    stabilityStatus.innerHTML = `<span class="lamp"></span><span><b>${stabilityState.status}</b> · ${stabilityState.detail}</span>`;
   }
 };
 

@@ -84,7 +84,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small leak/attenuation stage before modulation. The **Minimal loop** button sets up the first weak reciprocal pair: audio feedback centroid to visual slit position, and visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Minimal loop** button sets up the first weak reciprocal pair: audio feedback centroid to visual slit position, and visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -167,7 +167,7 @@ Modulations apply additively or multiplicatively over the base parameter values,
 
 Per-modulation depth sliders mean you can isolate any single coupling to study it, or stack them all.
 
-Feedback routing uses safety transforms before modulation: route depth is capped, route engagement ramps from 0 to the requested depth, and feedback-routed analysis values are leaked/attenuated. These controls are intentionally part of the instrument core rather than polish.
+Feedback routing uses safety transforms before modulation: route depth is capped, route engagement ramps from 0 to the requested depth, feedback taps use slower smoothing, and feedback-routed analysis values are attenuated. These controls are intentionally part of the instrument core rather than polish.
 
 ---
 
@@ -240,17 +240,17 @@ Three damping mechanisms to implement together:
 
 - **Slow follows.** The smoothing low-pass filters on analyzed values should be markedly slower in feedback mode than in source mode. If the loop responds in milliseconds, it locks instantly. If it responds over seconds, the system has time to evolve before the loop closes.
 - **Depth limits.** Modulation depths must be capped lower in feedback mode. A depth of 0.5 that feels gentle on source signals can be wildly unstable on feedback signals because the loop multiplies through itself each cycle. A reasonable starting cap is 0.3.
-- **Leak.** Each feedback path should be slightly attenuated per cycle (e.g., the analyzed value is multiplied by 0.97–0.99 before being applied). This is the equivalent of a resistor in a positive feedback circuit — it ensures the system can't sustain forever without fresh input from the source.
+- **Attenuation.** Each feedback path is slightly reduced before modulation. This is a practical damping control, not a true time-based decay.
 
 ### Failure modes
 
 **Lockup.** The system finds a stable attractor and sits in it. All meters flatten to constant values. The output becomes static — the visual stops evolving, the audio holds a fixed drone. Recognized by: meters reading the same value for more than ~1 second with no modulation activity. Cause: damping too high, depths too low, or the system has found a self-consistent state from which it can't escape on its own.
 
-**Runaway.** Positive feedback amplifies through the loop. Analyzed values clip to extremes. The visual goes to pure white or pure black; the audio clips or drops to silence. Recognized by: meters pegged at 0 or 1 for sustained periods, harsh output. Cause: damping too low, depths too high, leak too small.
+**Runaway.** Positive feedback amplifies through the loop. Analyzed values clip to extremes. The visual goes to pure white or pure black; the audio clips or drops to silence. Recognized by: meters pegged at 0 or 1 for sustained periods, harsh output. Cause: damping too low, depths too high, attenuation too weak.
 
 **Sweet spot.** Perpetual evolution without convergence — meters in motion, output continuously shifting but never extreme. This is the goal. The system surprises you without becoming useless.
 
-A small stability indicator in the UI (a light that goes amber when meters flatten or peg) makes it easy to feel where the system is sitting in real time.
+A small stability indicator in the UI watches the active feedback routes over a rolling 2-second window. It reports stable, lockup, or runaway when meters flatten or peg.
 
 ### Minimal first loop
 
@@ -265,7 +265,7 @@ This is the smallest closed loop: each domain affects the other through exactly 
 
 - A `source / feedback` toggle per routing (six toggles total) rather than a single global switch.
 - A slow-ramp engage control — when feedback is enabled on any routing, that routing's depth scales up over ~5 seconds, giving the operator time to pull back if the system heads in a bad direction.
-- A stability indicator (per-routing or global) that flags lockup or runaway in real time.
+- A global stability indicator that flags lockup or runaway in real time.
 - A panic button that instantly zeroes all feedback depths.
 - Optionally: a "freeze" toggle that holds the current feedback state, letting you walk away from a good moment without it drifting.
 
