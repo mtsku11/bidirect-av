@@ -83,3 +83,5 @@ After this screen, the hue path was corrected in code:
 - `visHueToAudSlit` now folds hue around the red seam before mapping it onto linear slit position.
 
 That follow-up directly targets the `Cars` failure hypothesis from this screen. The results in this file remain valid for the pre-fix app state; `Cars`, `Marquee`, and `Bouncers` still need to be re-screened under the updated hue path.
+
+That re-screen has now been completed in `test-sessions/2026-05-07-explorer-loop-post-fix.md`.
