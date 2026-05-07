@@ -21,8 +21,10 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Add preset save/recall after the minimal loop is stable.
 - [x] Log the next comparative sessions with saved hash or slot names attached.
 - [x] Build a first small library of named presets from stable and unstable behaviors.
-- [ ] Test an alternative minimal reciprocal pair that aims for sustained evolution instead of brightness lockup.
-- [ ] Decide whether to keep `visBrightToAudGain` as the primary feedback leg or demote it to a lockup-demo preset.
+- [x] Test an alternative minimal reciprocal pair that aims for sustained evolution instead of brightness lockup.
+- [x] Decide whether to keep `visBrightToAudGain` as the primary feedback leg or demote it to a lockup-demo preset.
+- [ ] Tune the Explorer loop further so it survives `Cars` without collapsing into hue lockup.
+- [ ] Decide whether the next explorer candidate should keep hue feedback or pivot to a different second feedback leg.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks

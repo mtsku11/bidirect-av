@@ -285,7 +285,7 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
-Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, attenuation, stability indication, and panic recovery. The first short test session is logged in `test-sessions/2026-05-07-minimal-loop.md`, and the first comparative matrix is logged in `test-sessions/2026-05-07-comparative-minimal-loop.md`. The current brightness-to-gain reciprocal pair is bounded but consistently converges toward lockup rather than a sustained evolving sweet spot.
+Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. An alternative `Explorer loop` has been added: feedback centroid to visual position plus feedback hue to audio slit position at depth `0.15`. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, and `test-sessions/2026-05-07-explorer-loop-screen.md`. The old pair remains a bounded lockup demo; the new pair is more mobile on `Marquee` and `Bouncers + Pulse`, but still not universal enough to count as the project's settled sweet spot.
 
 Goals:
 

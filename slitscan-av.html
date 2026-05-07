@@ -399,7 +399,8 @@ input[type=file] { display: none; }
       <div class="section shared">
         <div class="section-title shared">◇ feedback safety <small>cap 0.30 · ramp 5s</small></div>
         <div class="row">
-          <button class="cmd audio" id="minimalLoopBtn">Minimal loop</button>
+          <button class="cmd audio" id="explorerLoopBtn">Explorer loop</button>
+          <button class="cmd" id="minimalLoopBtn">Lockup loop</button>
           <button class="cmd" id="panicBtn">Panic</button>
         </div>
         <div class="safety-status" id="feedbackSafetyStatus">
@@ -670,6 +671,7 @@ const audioMix      = document.getElementById('audioMix');
 const resSelect     = document.getElementById('resSelect');
 const axisHBtn      = document.getElementById('axisH');
 const axisVBtn      = document.getElementById('axisV');
+const explorerLoopBtn = document.getElementById('explorerLoopBtn');
 const presetSlotName = document.getElementById('presetSlotName');
 const copyPresetBtn = document.getElementById('copyPresetBtn');
 const loadPresetBtn = document.getElementById('loadPresetBtn');
@@ -1775,6 +1777,7 @@ function loop(now) {
   // 4) Render visual
   pctx.drawImage(sourceCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
   const writeIdx = 1 - pingIdx;
+  if (!renderer || !simMaterial || !displayMaterial || !pingPong[pingIdx] || !pingPong[writeIdx]) return;
   simMaterial.uniforms.uFeedback.value = pingPong[pingIdx].texture;
   renderer.setRenderTarget(pingPong[writeIdx]);
   renderer.render(simScene, quadCamera);
@@ -2120,19 +2123,36 @@ function panicFeedback() {
   updateLabels();
 }
 
-function engageMinimalLoop() {
+function configureFeedbackQuickstart(routeConfigs) {
   for (const route of ROUTES) {
     setRouteTap(route.id, 'source');
     setRouteDepth(route.id, 0);
   }
-  setRouteTap('audCentroidToVisPos', 'feedback');
-  setRouteDepth('audCentroidToVisPos', 0.2);
-  setRouteTap('visBrightToAudGain', 'feedback');
-  setRouteDepth('visBrightToAudGain', 0.2);
+  for (const routeConfig of routeConfigs) {
+    setRouteTap(routeConfig.id, 'feedback');
+    setRouteDepth(routeConfig.id, routeConfig.depth);
+  }
   updateLabels();
 }
 
+function engageMinimalLoop() {
+  configureFeedbackQuickstart([
+    { id: 'audCentroidToVisPos', depth: 0.2 },
+    { id: 'visBrightToAudGain', depth: 0.2 },
+  ]);
+}
+
+function engageExplorerLoop() {
+  // Hue feedback stays more mobile than brightness feedback on Marquee and Bouncers,
+  // so keep the starting depth slightly lower for a gentler exploratory pair.
+  configureFeedbackQuickstart([
+    { id: 'audCentroidToVisPos', depth: 0.15 },
+    { id: 'visHueToAudSlit', depth: 0.15 },
+  ]);
+}
+
 panicBtn?.addEventListener('click', panicFeedback);
+explorerLoopBtn?.addEventListener('click', engageExplorerLoop);
 minimalLoopBtn?.addEventListener('click', engageMinimalLoop);
 
 resSelect.addEventListener('change', () => {
