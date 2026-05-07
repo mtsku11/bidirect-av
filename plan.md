@@ -234,7 +234,7 @@ Deliverables:
 
 ### Phase 1 — Technical cleanup before feedback
 
-Status: in progress. The explicit routing matrix refactor is complete. Source/feedback analysis separation and the debug readout are being implemented as the next foundation step.
+Status: complete for the current build. The explicit routing matrix, source/feedback analysis separation, debug readout, and per-routing tap selectors are implemented.
 
 Goals:
 
@@ -258,7 +258,7 @@ Acceptance criteria:
 
 ### Phase 2 — Processed-output analysis taps
 
-Status: in progress. The current build slice adds simultaneous source and processed-output values while keeping route defaults on source analysis.
+Status: complete for the current build. Source and processed-output values are available simultaneously for visual and audio features, and the UI exposes source/feedback tap selection per route.
 
 Goals:
 
@@ -284,6 +284,8 @@ Acceptance criteria:
 - Post-worklet audio analysis behaves consistently with gain staging.
 
 ### Phase 3 — Minimal reciprocal feedback loop
+
+Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, leak, and panic recovery. Full test-session logging is still pending.
 
 Goals:
 
@@ -625,9 +627,10 @@ Mitigation:
 - [ ] Create GitHub issues for Phases 1 to 4.
 - [x] Refactor routing state into explicit data structures.
 - [x] Add source vs feedback analysis taps.
-- [ ] Add per-routing source/feedback tap controls.
-- [ ] Implement the minimal two-routing reciprocal loop.
-- [ ] Add panic, ramp, leak, and feedback depth cap.
+- [x] Add per-routing source/feedback tap controls.
+- [x] Implement the minimal two-routing reciprocal loop.
+- [x] Add panic, ramp, leak, and feedback depth cap.
+- [ ] Add lockup/runaway stability indicator.
 - [ ] Record the first test sessions and begin the findings log.
 - [ ] Start a paper notes document with headings from the proposed NIME structure.
 

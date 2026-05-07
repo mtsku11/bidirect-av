@@ -70,7 +70,7 @@ Master controls output gain. Dry/wet blends the original input signal with the s
 
 ### Cross-modulation depths
 
-Each row is a routing from an analyzed feature to a target parameter. The depth slider controls how strongly that routing is active (0 = disabled). The meter beneath shows the live value of the source feature in real time.
+Each row is a routing from an analyzed feature to a target parameter. The depth slider controls how strongly that routing is active (0 = disabled). The `source / feedback` selector chooses whether that route reads pre-effect source analysis or processed-output feedback analysis. The meter beneath shows the live value currently feeding that route.
 
 **Audio drives visual:**
 - `loudness → scan speed` — amplitude (RMS) of audio adds to the visual scan speed.
@@ -81,6 +81,10 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 - `motion → scan speed` — frame-to-frame pixel difference adds to audio scan speed.
 - `brightness → gain` — average frame luminance multiplies audio gain.
 - `hue → slit position` — dominant color hue (saturation-weighted circular mean) shifts the audio slit through the spectrum.
+
+### Feedback safety
+
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small leak/attenuation stage before modulation. The **Minimal loop** button sets up the first weak reciprocal pair: audio feedback centroid to visual slit position, and visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -148,7 +152,7 @@ The phase strategy — using the input frame's phase with the propagated magnitu
 - *Centroid* — weighted-mean bin index, normalized 0–1.
 - *Onset* — positive-going spectral flux with fast attack and slow release, threshold-based. Crude, but the right shape for triggering events.
 
-Visual analysis now keeps separate source and feedback taps: source analysis reads the unprocessed source canvas, while feedback analysis downsamples the displayed slit-scan output. The analysis taps panel shows source and feedback values side by side. Routes still default to source analysis until per-routing source/feedback controls are enabled.
+Visual analysis now keeps separate source and feedback taps: source analysis reads the unprocessed source canvas, while feedback analysis downsamples the displayed slit-scan output. The analysis taps panel shows source and feedback values side by side. Each route can choose source or feedback independently.
 
 All analysis values are smoothed with single-pole low-pass filters. Time constants vary by feature — fast for transients (motion, amplitude, onset), slower for things that should feel stable (hue, brightness, centroid). Without smoothing the cross-modulation feels twitchy; with it, musical.
 
@@ -162,6 +166,8 @@ Modulations apply additively or multiplicatively over the base parameter values,
 - *Clear modulation* (onset → visual clear) — the visual fragment shader has a `uClear` uniform that fades the feedback contribution toward black; onsets push this up briefly with fast decay.
 
 Per-modulation depth sliders mean you can isolate any single coupling to study it, or stack them all.
+
+Feedback routing uses safety transforms before modulation: route depth is capped, route engagement ramps from 0 to the requested depth, and feedback-routed analysis values are leaked/attenuated. These controls are intentionally part of the instrument core rather than polish.
 
 ---
 

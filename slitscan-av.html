@@ -134,6 +134,18 @@ aside {
 .modline.toaudio .arr { color: var(--accent-2); }
 .modline .v { font-variant-numeric: tabular-nums; color: var(--accent); }
 .modline.toaudio .v { color: var(--accent-2); }
+.modline .route-controls {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 6px; align-items: center; font-size: 9px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.modline .route-controls select {
+  font-size: 9px; padding: 4px 6px; letter-spacing: 0.08em;
+}
+.modline .ramp {
+  font-variant-numeric: tabular-nums; color: var(--dim); min-width: 42px; text-align: right;
+}
+.modline.feedback .ramp { color: var(--accent-2); }
 .modline .meter {
   height: 4px; background: var(--border); position: relative; overflow: hidden;
 }
@@ -175,6 +187,12 @@ button.cmd:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .row { display: flex; gap: 5px; flex-wrap: wrap; }
 .row > * { flex: 1; min-width: 0; }
+
+.safety-status {
+  font-size: 10px; line-height: 1.5; color: var(--dim);
+  border: 1px dashed rgba(255,255,255,0.08); padding: 7px;
+}
+.safety-status b { color: var(--accent-2); font-weight: normal; }
 
 select {
   background: var(--bg); color: var(--text); border: 1px solid var(--border);
@@ -321,6 +339,18 @@ input[type=file] { display: none; }
         </div>
       </div>
 
+      <!-- ============= FEEDBACK SAFETY ============= -->
+      <div class="section shared">
+        <div class="section-title shared">◇ feedback safety <small>cap 0.30 · ramp 5s</small></div>
+        <div class="row">
+          <button class="cmd audio" id="minimalLoopBtn">Minimal loop</button>
+          <button class="cmd" id="panicBtn">Panic</button>
+        </div>
+        <div class="safety-status" id="feedbackSafetyStatus">
+          Feedback routes: <b>0</b> · status: source-driven
+        </div>
+      </div>
+
       <!-- ============= CROSS-MOD: AUDIO → VISUAL ============= -->
       <div class="section routing">
         <div class="section-title visual">↳ audio drives visual <small>depth</small></div>
@@ -328,18 +358,21 @@ input[type=file] { display: none; }
         <div class="modline">
           <div class="arrow"><span><span class="src">loudness</span> <span class="arr">→</span> <span class="dst">scan speed</span></span><span class="v" id="modA1Val">0.50</span></div>
           <input type="range" id="modA1" min="0" max="1" step="0.01" value="0.5">
+          <div class="route-controls"><select id="tapA1"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampA1">src</span></div>
           <div class="meter"><span id="meterA1"></span></div>
         </div>
 
         <div class="modline">
           <div class="arrow"><span><span class="src">centroid</span> <span class="arr">→</span> <span class="dst">slit position</span></span><span class="v" id="modA2Val">0.50</span></div>
           <input type="range" id="modA2" min="0" max="1" step="0.01" value="0.5">
+          <div class="route-controls"><select id="tapA2"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampA2">src</span></div>
           <div class="meter"><span id="meterA2"></span></div>
         </div>
 
         <div class="modline">
           <div class="arrow"><span><span class="src">onsets</span> <span class="arr">→</span> <span class="dst">clear</span></span><span class="v" id="modA3Val">0.30</span></div>
           <input type="range" id="modA3" min="0" max="1" step="0.01" value="0.3">
+          <div class="route-controls"><select id="tapA3"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampA3">src</span></div>
           <div class="meter"><span id="meterA3"></span></div>
         </div>
       </div>
@@ -351,18 +384,21 @@ input[type=file] { display: none; }
         <div class="modline toaudio">
           <div class="arrow"><span><span class="src">motion</span> <span class="arr">→</span> <span class="dst">scan speed</span></span><span class="v" id="modV1Val">0.50</span></div>
           <input type="range" class="audio" id="modV1" min="0" max="1" step="0.01" value="0.5">
+          <div class="route-controls"><select id="tapV1"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampV1">src</span></div>
           <div class="meter"><span id="meterV1"></span></div>
         </div>
 
         <div class="modline toaudio">
           <div class="arrow"><span><span class="src">brightness</span> <span class="arr">→</span> <span class="dst">gain</span></span><span class="v" id="modV2Val">0.30</span></div>
           <input type="range" class="audio" id="modV2" min="0" max="1" step="0.01" value="0.3">
+          <div class="route-controls"><select id="tapV2"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampV2">src</span></div>
           <div class="meter"><span id="meterV2"></span></div>
         </div>
 
         <div class="modline toaudio">
           <div class="arrow"><span><span class="src">hue</span> <span class="arr">→</span> <span class="dst">slit position</span></span><span class="v" id="modV3Val">0.50</span></div>
           <input type="range" class="audio" id="modV3" min="0" max="1" step="0.01" value="0.5">
+          <div class="route-controls"><select id="tapV3"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampV3">src</span></div>
           <div class="meter"><span id="meterV3"></span></div>
         </div>
       </div>
@@ -574,6 +610,9 @@ const audioMix      = document.getElementById('audioMix');
 const resSelect     = document.getElementById('resSelect');
 const axisHBtn      = document.getElementById('axisH');
 const axisVBtn      = document.getElementById('axisV');
+const minimalLoopBtn = document.getElementById('minimalLoopBtn');
+const panicBtn      = document.getElementById('panicBtn');
+const feedbackSafetyStatus = document.getElementById('feedbackSafetyStatus');
 
 /* ============================================================
    ANALYSIS HUB
@@ -596,6 +635,10 @@ const analysisTaps = {
 // Source analysis remains the default modulation feed until a route opts into feedback.
 const A = analysisTaps.source;
 
+const FEEDBACK_DEPTH_CAP = 0.3;
+const FEEDBACK_RAMP_SECONDS = 5;
+const FEEDBACK_LEAK = 0.98;
+
 const ROUTES = [
   {
     id: 'audAmpToVisSpeed',
@@ -605,10 +648,14 @@ const ROUTES = [
     targetDomain: 'visual',
     targetParam: 'scanSpeed',
     controlId: 'modA1',
+    tapControlId: 'tapA1',
     valueId: 'modA1Val',
     meterId: 'meterA1',
+    rampId: 'rampA1',
     defaultDepth: 0.5,
     depth: 0.5,
+    feedbackRamp: 0,
+    feedbackValue: 0,
   },
   {
     id: 'audCentroidToVisPos',
@@ -618,10 +665,14 @@ const ROUTES = [
     targetDomain: 'visual',
     targetParam: 'slitPosition',
     controlId: 'modA2',
+    tapControlId: 'tapA2',
     valueId: 'modA2Val',
     meterId: 'meterA2',
+    rampId: 'rampA2',
     defaultDepth: 0.5,
     depth: 0.5,
+    feedbackRamp: 0,
+    feedbackValue: 0.5,
   },
   {
     id: 'audOnsetToVisClear',
@@ -631,10 +682,14 @@ const ROUTES = [
     targetDomain: 'visual',
     targetParam: 'clear',
     controlId: 'modA3',
+    tapControlId: 'tapA3',
     valueId: 'modA3Val',
     meterId: 'meterA3',
+    rampId: 'rampA3',
     defaultDepth: 0.3,
     depth: 0.3,
+    feedbackRamp: 0,
+    feedbackValue: 0,
   },
   {
     id: 'visMotionToAudSpeed',
@@ -644,10 +699,14 @@ const ROUTES = [
     targetDomain: 'audio',
     targetParam: 'scanSpeed',
     controlId: 'modV1',
+    tapControlId: 'tapV1',
     valueId: 'modV1Val',
     meterId: 'meterV1',
+    rampId: 'rampV1',
     defaultDepth: 0.5,
     depth: 0.5,
+    feedbackRamp: 0,
+    feedbackValue: 0,
   },
   {
     id: 'visBrightToAudGain',
@@ -657,10 +716,14 @@ const ROUTES = [
     targetDomain: 'audio',
     targetParam: 'gain',
     controlId: 'modV2',
+    tapControlId: 'tapV2',
     valueId: 'modV2Val',
     meterId: 'meterV2',
+    rampId: 'rampV2',
     defaultDepth: 0.3,
     depth: 0.3,
+    feedbackRamp: 0,
+    feedbackValue: 0,
   },
   {
     id: 'visHueToAudSlit',
@@ -670,10 +733,14 @@ const ROUTES = [
     targetDomain: 'audio',
     targetParam: 'slitPosition',
     controlId: 'modV3',
+    tapControlId: 'tapV3',
     valueId: 'modV3Val',
     meterId: 'meterV3',
+    rampId: 'rampV3',
     defaultDepth: 0.5,
     depth: 0.5,
+    feedbackRamp: 0,
+    feedbackValue: 0.5,
   },
 ];
 
@@ -684,18 +751,70 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
 function routeDepth(id) {
-  return routesById[id]?.depth ?? 0;
+  const route = routesById[id];
+  if (!route) return 0;
+  const cappedDepth = route.analysisTap === 'feedback'
+    ? Math.min(route.depth, FEEDBACK_DEPTH_CAP)
+    : route.depth;
+  return cappedDepth * (route.analysisTap === 'feedback' ? route.feedbackRamp : 1);
 }
 
 function setRouteDepth(id, value) {
   const route = routesById[id];
   if (!route) return;
-  route.depth = clamp01(Number.parseFloat(value) || 0);
+  const requested = clamp01(Number.parseFloat(value) || 0);
+  route.depth = route.analysisTap === 'feedback'
+    ? Math.min(requested, FEEDBACK_DEPTH_CAP)
+    : requested;
+}
+
+function setRouteTap(id, tap) {
+  const route = routesById[id];
+  if (!route || !analysisTaps[tap]) return;
+  if (route.analysisTap === tap) return;
+  route.analysisTap = tap;
+  if (tap === 'feedback') {
+    route.depth = Math.min(route.depth, FEEDBACK_DEPTH_CAP);
+    route.feedbackRamp = 0;
+    route.feedbackValue = routeValueRaw(route, 'feedback');
+  } else {
+    route.feedbackRamp = 0;
+  }
+}
+
+function routeValueRaw(route, tapName = route.analysisTap) {
+  const tap = analysisTaps[tapName] ?? analysisTaps.source;
+  return tap[route.sourceDomain]?.[route.sourceFeature] ?? 0;
 }
 
 function routeValue(route) {
-  const tap = analysisTaps[route.analysisTap] ?? analysisTaps.source;
-  return tap[route.sourceDomain]?.[route.sourceFeature] ?? 0;
+  const raw = routeValueRaw(route);
+  if (route.analysisTap !== 'feedback') return raw;
+  return route.feedbackValue;
+}
+
+function leakFeedbackValue(route, value) {
+  if (route.sourceFeature === 'centroid' || route.sourceFeature === 'hue') {
+    return 0.5 + (value - 0.5) * FEEDBACK_LEAK;
+  }
+  return value * FEEDBACK_LEAK;
+}
+
+function updateFeedbackRouteValues() {
+  for (const route of ROUTES) {
+    if (route.analysisTap !== 'feedback') continue;
+    const raw = routeValueRaw(route, 'feedback');
+    route.feedbackValue = leakFeedbackValue(route, raw);
+  }
+}
+
+function updateFeedbackRamps(dt) {
+  const step = dt / FEEDBACK_RAMP_SECONDS;
+  for (const route of ROUTES) {
+    const target = route.analysisTap === 'feedback' ? 1 : 0;
+    if (route.feedbackRamp < target) route.feedbackRamp = Math.min(target, route.feedbackRamp + step);
+    else if (route.feedbackRamp > target) route.feedbackRamp = Math.max(target, route.feedbackRamp - step);
+  }
 }
 
 /* ============================================================
@@ -1282,13 +1401,16 @@ function pushAudioParams() {
   const baseCenter = parseFloat(slitCenter.value);
   const baseW      = parseFloat(slitWidth.value);
   const baseScan   = parseFloat(scanSpeed.value);
+  const hue = routeValue(routesById.visHueToAudSlit);
+  const motion = routeValue(routesById.visMotionToAudSpeed);
+  const brightness = routeValue(routesById.visBrightToAudGain);
 
   // visual hue (centered on 0.5) modulates audio slit position
-  const hueMod = (A.visual.hue - 0.5) * 0.6 * routeDepth('visHueToAudSlit'); // ±0.3 max
+  const hueMod = (hue - 0.5) * 0.6 * routeDepth('visHueToAudSlit'); // ±0.3 max
   const audioCenter = clamp01(baseCenter + hueMod);
 
   // visual motion adds to scan speed
-  const motionAdd = A.visual.motion * 3.0 * routeDepth('visMotionToAudSpeed'); // up to +3
+  const motionAdd = motion * 3.0 * routeDepth('visMotionToAudSpeed'); // up to +3
   const audioScan = baseScan + motionAdd;
 
   const cBin = sliderToBin(audioCenter, audioCtx.sampleRate);
@@ -1306,7 +1428,7 @@ function pushAudioParams() {
   if (masterGain) {
     const baseG = parseFloat(audioGain.value);
     const depth = routeDepth('visBrightToAudGain');
-    const gMul = (1 - depth) + A.visual.brightness * depth; // depth=0 → 1.0; depth=1 → brightness
+    const gMul = (1 - depth) + brightness * depth; // depth=0 → 1.0; depth=1 → brightness
     masterGain.gain.setTargetAtTime(baseG * gMul, audioCtx.currentTime, 0.05);
   }
 }
@@ -1358,17 +1480,20 @@ function computeVisualParams() {
   const baseCenter = parseFloat(slitCenter.value);
   const baseW      = parseFloat(slitWidth.value);
   const baseScan   = parseFloat(scanSpeed.value);
+  const centroid = routeValue(routesById.audCentroidToVisPos);
+  const amplitude = routeValue(routesById.audAmpToVisSpeed);
+  const onset = routeValue(routesById.audOnsetToVisClear);
 
   // audio centroid (centered on 0.5) modulates visual slit position
-  const centMod = (A.audio.centroid - 0.5) * 0.6 * routeDepth('audCentroidToVisPos'); // ±0.3
+  const centMod = (centroid - 0.5) * 0.6 * routeDepth('audCentroidToVisPos'); // ±0.3
   const visCenter = clamp01(baseCenter + centMod);
 
   // audio amplitude adds to scan speed
-  const ampAdd = A.audio.amplitude * 3.0 * routeDepth('audAmpToVisSpeed'); // up to +3
+  const ampAdd = amplitude * 3.0 * routeDepth('audAmpToVisSpeed'); // up to +3
   const visScan = baseScan + ampAdd;
 
   // onset triggers clear
-  const clearAmount = A.audio.onset * routeDepth('audOnsetToVisClear');
+  const clearAmount = onset * routeDepth('audOnsetToVisClear');
 
   return { visCenter, visW: baseW, visScan, clearAmount };
 }
@@ -1462,6 +1587,8 @@ function loop(now) {
   // 2) Analyze
   analyzeVisual();
   if (audioOn) analyzeAudio();
+  updateFeedbackRamps(dt);
+  updateFeedbackRouteValues();
 
   // 3) Apply modulations to params
   const { visCenter, visW, visScan, clearAmount } = computeVisualParams();
@@ -1493,6 +1620,7 @@ function loop(now) {
     metersFrame = 0;
     updateMeters();
     updateTapDebug();
+    updateLabels();
   }
 
   // FPS
@@ -1575,9 +1703,26 @@ const updateLabels = () => {
   document.getElementById('scanSpeedVal').textContent  = parseFloat(scanSpeed.value).toFixed(2);
   document.getElementById('audioGainVal').textContent  = parseFloat(audioGain.value).toFixed(2);
   document.getElementById('audioMixVal').textContent   = parseFloat(audioMix.value).toFixed(2);
+  let feedbackCount = 0;
   for (const route of ROUTES) {
     const value = document.getElementById(route.valueId);
     if (value) value.textContent = route.depth.toFixed(2);
+    const depthControl = document.getElementById(route.controlId);
+    if (depthControl && depthControl.value !== String(route.depth)) depthControl.value = route.depth;
+    const tapControl = document.getElementById(route.tapControlId);
+    if (tapControl) tapControl.value = route.analysisTap;
+    const ramp = document.getElementById(route.rampId);
+    if (ramp) ramp.textContent = route.analysisTap === 'feedback'
+      ? `${Math.round(route.feedbackRamp * 100)}%`
+      : 'src';
+    const modline = depthControl?.closest('.modline');
+    if (modline) modline.classList.toggle('feedback', route.analysisTap === 'feedback');
+    if (route.analysisTap === 'feedback') feedbackCount++;
+  }
+  if (feedbackSafetyStatus) {
+    feedbackSafetyStatus.innerHTML = feedbackCount
+      ? `Feedback routes: <b>${feedbackCount}</b> · cap ${FEEDBACK_DEPTH_CAP.toFixed(2)} · leak ${FEEDBACK_LEAK.toFixed(2)} · ramp ${FEEDBACK_RAMP_SECONDS}s`
+      : 'Feedback routes: <b>0</b> · status: source-driven';
   }
 };
 
@@ -1596,6 +1741,41 @@ const bindRouteDepth = (route) => {
   });
 };
 ROUTES.forEach(bindRouteDepth);
+
+const bindRouteTap = (route) => {
+  const el = document.getElementById(route.tapControlId);
+  if (!el) return;
+  el.value = route.analysisTap;
+  el.addEventListener('change', () => {
+    setRouteTap(route.id, el.value);
+    updateLabels();
+  });
+};
+ROUTES.forEach(bindRouteTap);
+
+function panicFeedback() {
+  for (const route of ROUTES) {
+    if (route.analysisTap !== 'feedback') continue;
+    route.depth = 0;
+    route.feedbackRamp = 0;
+  }
+  updateLabels();
+}
+
+function engageMinimalLoop() {
+  for (const route of ROUTES) {
+    setRouteTap(route.id, 'source');
+    setRouteDepth(route.id, 0);
+  }
+  setRouteTap('audCentroidToVisPos', 'feedback');
+  setRouteDepth('audCentroidToVisPos', 0.2);
+  setRouteTap('visBrightToAudGain', 'feedback');
+  setRouteDepth('visBrightToAudGain', 0.2);
+  updateLabels();
+}
+
+panicBtn?.addEventListener('click', panicFeedback);
+minimalLoopBtn?.addEventListener('click', engageMinimalLoop);
 
 resSelect.addEventListener('change', () => {
   const [w, h] = resSelect.value.split(',').map(Number);
