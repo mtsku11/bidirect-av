@@ -74,3 +74,12 @@ The following explorer presets were saved and added to `presets/library.md`:
 ## Side Fix
 
 While testing, the render loop produced a transient warning on fresh load when ping-pong targets were not yet ready. A guard was added in `slitscan-av.html` so the frame is skipped cleanly instead of dereferencing an undefined render target.
+
+## Engineering Follow-up
+
+After this screen, the hue path was corrected in code:
+
+- Hue smoothing now interpolates on the unit circle instead of linearly across the `0/1` seam.
+- `visHueToAudSlit` now folds hue around the red seam before mapping it onto linear slit position.
+
+That follow-up directly targets the `Cars` failure hypothesis from this screen. The results in this file remain valid for the pre-fix app state; `Cars`, `Marquee`, and `Bouncers` still need to be re-screened under the updated hue path.

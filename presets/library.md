@@ -24,13 +24,13 @@ Open-loop reference for the most visually active built-in scene plus the lighter
 
 ## Explorer loop family
 
-These presets use the new exploratory quick-start pair:
+These presets use the exploratory quick-start pair:
 
 - `audCentroidToVisPos`: feedback tap, depth `0.15`
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-Cars still tends to hue-lock under this pair, so the best current explorer presets are `Marquee` and `Bouncers + Pulse`.
+The current hashes were recorded before the wrap-safe hue smoothing/mapping fix. `Cars` needs to be re-screened under the updated hue path; until then, the best verified explorer presets remain `Marquee` and `Bouncers + Pulse`.
 
 ### `explorer-marquee-pulse`
 

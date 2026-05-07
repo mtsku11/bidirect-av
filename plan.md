@@ -285,7 +285,7 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
-Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. An alternative `Explorer loop` has been added: feedback centroid to visual position plus feedback hue to audio slit position at depth `0.15`. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, and `test-sessions/2026-05-07-explorer-loop-screen.md`. The old pair remains a bounded lockup demo; the new pair is more mobile on `Marquee` and `Bouncers + Pulse`, but still not universal enough to count as the project's settled sweet spot.
+Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. An alternative `Explorer loop` has been added: feedback centroid to visual position plus feedback hue to audio slit position at depth `0.15`. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, and `test-sessions/2026-05-07-explorer-loop-screen.md`. The old pair remains a bounded lockup demo; the new pair is more mobile on `Marquee` and `Bouncers + Pulse`. A wrap-safe fix for hue smoothing and hue-to-slit mapping has now landed to address the `Cars` seam failure, but the Explorer loop still needs to be re-screened before it can count as the project's settled sweet spot.
 
 Goals:
 

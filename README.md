@@ -80,11 +80,11 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 **Visual drives audio:**
 - `motion → scan speed` — frame-to-frame pixel difference adds to audio scan speed.
 - `brightness → gain` — average frame luminance multiplies audio gain.
-- `hue → slit position` — dominant color hue (saturation-weighted circular mean) shifts the audio slit through the spectrum.
+- `hue → slit position` — dominant color hue (saturation-weighted circular mean) shifts the audio slit through the spectrum, with wrap-safe folding at the red seam so near-red frames stay adjacent.
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button sets up the more mobile hue pair: audio feedback centroid to visual slit position plus visual feedback hue to audio slit position, both at depth `0.15`. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button sets up the more mobile hue pair: audio feedback centroid to visual slit position plus visual feedback hue to audio slit position, both at depth `0.15`. That hue path now uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -228,7 +228,7 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The new hue-based Explorer loop is better on `Marquee` and `Bouncers + Pulse`, but `Cars` still tends to lock under it. The project still does not have a universal sweet-spot quick-start.
+- The new hue-based Explorer loop is better on `Marquee` and `Bouncers + Pulse`. A wrap-safe hue smoothing/mapping fix has now landed for the `Cars` failure case, but `Cars` still needs to be re-screened before the project can claim a universal sweet-spot quick-start.
 
 ---
 

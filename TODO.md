@@ -23,8 +23,8 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Build a first small library of named presets from stable and unstable behaviors.
 - [x] Test an alternative minimal reciprocal pair that aims for sustained evolution instead of brightness lockup.
 - [x] Decide whether to keep `visBrightToAudGain` as the primary feedback leg or demote it to a lockup-demo preset.
-- [ ] Tune the Explorer loop further so it survives `Cars` without collapsing into hue lockup.
-- [ ] Decide whether the next explorer candidate should keep hue feedback or pivot to a different second feedback leg.
+- [ ] Re-screen `Explorer loop` on `Cars`, `Marquee`, and `Bouncers` after the wrap-safe hue smoothing/mapping fix.
+- [ ] If `Cars` still locks after the hue topology fix, pivot to a different second feedback leg for the explorer quick-start.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks
