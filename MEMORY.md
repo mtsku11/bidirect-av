@@ -13,4 +13,5 @@ Durable project facts for compacted sessions.
 - Current quick-start split: `Lockup loop` = `audCentroidToVisPos` feedback plus `visBrightToAudGain` feedback at depth `0.20`.
 - Current finding: the old brightness pair is a reliable bounded lockup demo. After the wrap-safe hue fix, the new hue pair is still only verified as mobile on `Marquee + Pulse` and `Bouncers + Pulse`; `Cars + Pad`, `Cars + Pulse`, `Marquee + Pad`, and `Bouncers + Pad` all lock.
 - Current engineering follow-up: hue analysis now smooths on the unit circle, and `visHueToAudSlit` now folds hue around the red seam before mapping onto linear slit position. That fixed the topology bug, but not the larger Explorer-loop stability problem.
+- Current screen result: replacing the Explorer loop's second feedback leg with lower-depth `visMotionToAudSpeed` or `visBrightToAudGain` while keeping `audCentroidToVisPos` fixed does not beat hue. Motion still runs away or collapses; brightness still locks.
 - Current preset library: `presets/library.md`.

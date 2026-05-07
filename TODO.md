@@ -24,7 +24,9 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Test an alternative minimal reciprocal pair that aims for sustained evolution instead of brightness lockup.
 - [x] Decide whether to keep `visBrightToAudGain` as the primary feedback leg or demote it to a lockup-demo preset.
 - [x] Re-screen `Explorer loop` on `Cars`, `Marquee`, and `Bouncers` after the wrap-safe hue smoothing/mapping fix.
-- [ ] Screen a different second feedback leg for the explorer quick-start; the hue pair still locks on `Cars` and on all current Pad-based cases.
+- [x] Screen a different second feedback leg for the explorer quick-start; the hue pair still locks on `Cars` and on all current Pad-based cases.
+- [ ] Screen a new explorer pair that changes the audio-feedback leg as well; keeping `audCentroidToVisPos` fixed did not solve the lockup problem.
+- [ ] Consider one weak source-driven assist if the next pure two-leg reciprocal pairs remain too collapse-prone.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks
