@@ -142,11 +142,13 @@ The phase strategy — using the input frame's phase with the propagated magnitu
 - *Motion* — per-pixel absolute difference from previous frame, summed and normalized. Poor man's optical flow — fast and reactive enough for modulation duty.
 - *Hue* — per-pixel hue computation, then saturation-weighted circular mean. The weighting prevents gray pixels from pulling the result toward red (hue 0°).
 
-**Audio analysis** uses an `AnalyserNode` placed before the worklet:
+**Audio analysis** uses an `AnalyserNode` placed before the worklet for source analysis, and a second `AnalyserNode` after the worklet for processed-output feedback analysis:
 
 - *Amplitude* — RMS of the magnitude spectrum.
 - *Centroid* — weighted-mean bin index, normalized 0–1.
 - *Onset* — positive-going spectral flux with fast attack and slow release, threshold-based. Crude, but the right shape for triggering events.
+
+Visual analysis now keeps separate source and feedback taps: source analysis reads the unprocessed source canvas, while feedback analysis downsamples the displayed slit-scan output. The analysis taps panel shows source and feedback values side by side. Routes still default to source analysis until per-routing source/feedback controls are enabled.
 
 All analysis values are smoothed with single-pole low-pass filters. Time constants vary by feature — fast for transients (motion, amplitude, onset), slower for things that should feel stable (hue, brightness, centroid). Without smoothing the cross-modulation feels twitchy; with it, musical.
 
@@ -168,7 +170,7 @@ Per-modulation depth sliders mean you can isolate any single coupling to study i
 This is a single self-contained HTML file. There are no external assets — Three.js loads from a CDN, and the audio worklet ships inline as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
 
 ```
-slitscan-av.html    ~1450 lines
+slitscan-av.html    ~1600 lines
 ├── <style>          theme variables, layout, typography
 ├── markup           sidebar controls + main stage
 └── <script>         module

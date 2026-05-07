@@ -28,8 +28,9 @@ Read these files in this order:
 1. `agent.md` for operating instructions, permissions, boundaries, and context-loading order.
 2. `README.md` for the current user-facing description, controls, architecture, and known limitations.
 3. `plan.md` for the research direction, development phases, acceptance criteria, and testing protocol.
-4. `suggested-reading.md` for academic framing and literature-reading priorities.
-5. `slitscan-av.html` for implementation reality before changing code.
+4. `TODO.md` for current build status, immediate implementation tasks, and known follow-ups.
+5. `suggested-reading.md` for academic framing and literature-reading priorities.
+6. `slitscan-av.html` for implementation reality before changing code.
 
 If a conversation decision must survive compaction, record it in the appropriate Markdown file before relying on it. If the Markdown files and implementation disagree, inspect the implementation, preserve user work, and update the relevant documentation as part of the change.
 
