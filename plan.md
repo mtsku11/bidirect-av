@@ -285,7 +285,7 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
-Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, attenuation, stability indication, and panic recovery. The first short test session is logged in `test-sessions/2026-05-07-minimal-loop.md`; longer comparative sessions are still pending.
+Status: in progress. A minimal-loop control now configures the intended weak bidirectional pair with feedback depth `0.20`, feedback cap `0.30`, slow ramp, attenuation, stability indication, and panic recovery. The first short test session is logged in `test-sessions/2026-05-07-minimal-loop.md`, and the first comparative matrix is logged in `test-sessions/2026-05-07-comparative-minimal-loop.md`. The current brightness-to-gain reciprocal pair is bounded but consistently converges toward lockup rather than a sustained evolving sweet spot.
 
 Goals:
 
@@ -336,7 +336,7 @@ Acceptance criteria:
 
 ### Phase 5 — Presets, logging, and reproducibility
 
-Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload, and the preset library plus broader logged sessions are still pending.
+Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload. A first curated preset library now exists in `presets/library.md`, and broader logged sessions are underway.
 
 Goals:
 

@@ -55,6 +55,7 @@ The default Cars + Pad pairing tends toward lockup rather than sustained evoluti
 ## Follow-Ups
 
 - Try the same minimal loop with Bouncers, Marquee, and Pulse before changing the heuristic.
+- Comparative follow-up completed in `test-sessions/2026-05-07-comparative-minimal-loop.md`.
 - Record saved preset hash or slot name with every longer comparative session now that preset round-tripping exists.
 - Consider whether the minimal loop should use visual motion rather than brightness for a more active first reciprocal pair.
 - Keep the current lockup threshold until several source combinations have been logged.

@@ -207,6 +207,7 @@ The sidebar now includes a small preset panel:
 - `Copy link` writes the current state into the URL hash and attempts to copy the shareable link.
 - `Save slot` / `Load slot` store and restore named presets through `localStorage`.
 - `Load hash` reapplies the current URL hash without relying on browser history state.
+- Curated reference hashes now live in `presets/library.md`.
 
 Preset capture currently includes:
 
@@ -226,6 +227,7 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - The Pulse source has no fixed seed, so identical settings won't reproduce identical sound across sessions.
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
+- The current minimal reciprocal pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is a bounded feedback demo, not yet the project's sweet-spot preset.
 
 ---
 
