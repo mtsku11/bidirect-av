@@ -12,12 +12,15 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Per-routing `source / feedback` selectors added.
 - [x] Feedback depth cap, ramp, attenuation, panic, and minimal-loop setup added in `feature/feedback-routing-controls`.
 - [x] Simple global lockup/runaway stability indicator added.
+- [x] Preset round-tripping added through URL hash and local slot names.
 
 ## Next Implementation Tasks
 
 - [x] Add manual feedback test-session logging template.
 - [x] Run first minimal-loop test session with notes on lockup/runaway/sweet spots.
-- [ ] Add preset save/recall after the minimal loop is stable.
+- [x] Add preset save/recall after the minimal loop is stable.
+- [ ] Log the next comparative sessions with saved hash or slot names attached.
+- [ ] Build a first small library of named presets from stable and unstable behaviors.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks

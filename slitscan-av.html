@@ -212,6 +212,29 @@ select {
   font-family: var(--mono); font-size: 11px; padding: 6px 8px; outline: none; cursor: pointer;
 }
 select:focus { border-color: var(--accent); }
+input[type=text] {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 8px 10px;
+  outline: none;
+}
+input[type=text]:focus { border-color: var(--accent); }
+
+.preset-status {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--dim);
+  border: 1px dashed rgba(255,255,255,0.08);
+  padding: 7px;
+}
+.preset-status.error {
+  color: #ff9f1c;
+  border-color: rgba(255,159,28,0.45);
+}
 
 #error {
   color: #ff5050; font-size: 11px; padding: 8px; border: 1px dashed #ff5050;
@@ -335,6 +358,26 @@ input[type=file] { display: none; }
         <div class="group audio">
           <div class="label">Dry / wet <span class="value" id="audioMixVal">1.00</span></div>
           <input type="range" id="audioMix" class="audio" min="0" max="1" step="0.01" value="1">
+        </div>
+      </div>
+
+      <!-- ============= PRESETS ============= -->
+      <div class="section shared">
+        <div class="section-title shared">◇ presets <small>hash / local slot</small></div>
+        <div class="group">
+          <div class="label">Slot name</div>
+          <input type="text" id="presetSlotName" value="minimal-loop" placeholder="minimal-loop">
+        </div>
+        <div class="row">
+          <button class="cmd" id="copyPresetBtn">Copy link</button>
+          <button class="cmd" id="loadPresetBtn">Load hash</button>
+        </div>
+        <div class="row">
+          <button class="cmd" id="saveSlotBtn">Save slot</button>
+          <button class="cmd" id="loadSlotBtn">Load slot</button>
+        </div>
+        <div class="preset-status" id="presetStatus">
+          No preset hash loaded. Save a slot or copy a link before longer test sessions.
         </div>
       </div>
 
@@ -627,6 +670,12 @@ const audioMix      = document.getElementById('audioMix');
 const resSelect     = document.getElementById('resSelect');
 const axisHBtn      = document.getElementById('axisH');
 const axisVBtn      = document.getElementById('axisV');
+const presetSlotName = document.getElementById('presetSlotName');
+const copyPresetBtn = document.getElementById('copyPresetBtn');
+const loadPresetBtn = document.getElementById('loadPresetBtn');
+const saveSlotBtn = document.getElementById('saveSlotBtn');
+const loadSlotBtn = document.getElementById('loadSlotBtn');
+const presetStatus = document.getElementById('presetStatus');
 const minimalLoopBtn = document.getElementById('minimalLoopBtn');
 const panicBtn      = document.getElementById('panicBtn');
 const feedbackSafetyStatus = document.getElementById('feedbackSafetyStatus');
@@ -663,6 +712,8 @@ const LOCKUP_VARIANCE_THRESHOLD = 0.0005;
 const LOCKUP_RANGE_THRESHOLD = 0.04;
 const RUNAWAY_LOW_THRESHOLD = 0.03;
 const RUNAWAY_HIGH_THRESHOLD = 0.97;
+const PRESET_SCHEMA_VERSION = 1;
+const PRESET_STORAGE_PREFIX = 'slitscan-av:preset:';
 
 const ROUTES = [
   {
@@ -780,6 +831,11 @@ const stabilityState = {
 // helpers
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = v => Math.max(0, Math.min(1, v));
+const clampRange = (value, min, max, fallback = min) => {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
 
 function routeDepth(id) {
   const route = routesById[id];
@@ -1088,6 +1144,14 @@ function setScene(name) {
   sourceTexture.minFilter = THREE.LinearFilter; sourceTexture.magFilter = THREE.LinearFilter;
   if (simMaterial) simMaterial.uniforms.uSource.value = sourceTexture;
   updateStatus();
+}
+
+function activateVideoVisualSource() {
+  if (!videoEl) return false;
+  useVideoSource = true;
+  document.querySelectorAll('button[data-scene]').forEach(b => b.classList.remove('primary'));
+  updateStatus();
+  return true;
 }
 
 let renderer, simScene, displayScene, quadCamera;
@@ -1788,6 +1852,189 @@ function updateStatus() {
   statusEl.classList.add('live');
 }
 
+function setResolution(value) {
+  if (!value) return;
+  const option = Array.from(resSelect.options).find(entry => entry.value === value);
+  if (!option) return;
+  if (resSelect.value === value) return;
+  resSelect.value = value;
+  const [w, h] = value.split(',').map(Number);
+  width = w;
+  height = h;
+  const old = sourceTexture;
+  initThree();
+  clearVisualFeedback();
+  sourceTexture = old;
+  simMaterial.uniforms.uSource.value = sourceTexture;
+  updateStatus();
+}
+
+function setAxis(nextAxis) {
+  axis = nextAxis === 'v' ? 'v' : 'h';
+  axisHBtn.classList.toggle('primary', axis === 'h');
+  axisVBtn.classList.toggle('primary', axis === 'v');
+}
+
+function selectAudioSource(kind) {
+  if (!kind) return false;
+  if (kind === 'video' && !videoEl) return false;
+  if (kind === 'file' && !audioFile) return false;
+  if (audioOn) buildSource(kind);
+  else {
+    currentSourceType = kind;
+    document.querySelectorAll('button[data-asource]').forEach(b => b.classList.toggle('primary', b.dataset.asource === kind));
+  }
+  return true;
+}
+
+function normalizePresetSlotName() {
+  const normalized = (presetSlotName?.value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32) || 'default';
+  if (presetSlotName) presetSlotName.value = normalized;
+  return normalized;
+}
+
+function presetHashValue() {
+  if (!window.location.hash.startsWith('#preset=')) return null;
+  return window.location.hash.slice('#preset='.length);
+}
+
+function encodePreset(preset) {
+  return btoa(JSON.stringify(preset))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function decodePreset(encoded) {
+  const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - normalized.length % 4) % 4);
+  return JSON.parse(atob(normalized + padding));
+}
+
+function collectPreset() {
+  return {
+    version: PRESET_SCHEMA_VERSION,
+    visualSource: useVideoSource
+      ? { mode: 'video' }
+      : { mode: 'scene', scene: currentScene },
+    audioSource: currentSourceType,
+    controls: {
+      slitCenter: clampRange(slitCenter.value, 0, 1, 0.5),
+      slitWidth: clampRange(slitWidth.value, 0.005, 0.5, 0.04),
+      scanSpeed: clampRange(scanSpeed.value, 0, 5, 1),
+      audioGain: clampRange(audioGain.value, 0, 1, 0.5),
+      audioMix: clampRange(audioMix.value, 0, 1, 1),
+      resolution: resSelect.value,
+      axis,
+    },
+    routes: ROUTES.map(route => ({
+      id: route.id,
+      tap: route.analysisTap,
+      depth: Number(route.depth.toFixed(3)),
+    })),
+  };
+}
+
+function setPresetStatus(message, isError = false) {
+  if (!presetStatus) return;
+  presetStatus.textContent = message;
+  presetStatus.classList.toggle('error', isError);
+}
+
+function writePresetHash(preset) {
+  const encoded = encodePreset(preset);
+  history.replaceState(null, '', `#preset=${encoded}`);
+  return `${window.location.origin}${window.location.pathname}#preset=${encoded}`;
+}
+
+function applyPreset(preset, options = {}) {
+  if (!preset || typeof preset !== 'object') throw new Error('Preset payload is not valid JSON.');
+  const controls = preset.controls || {};
+  const notes = [];
+
+  if (typeof controls.resolution === 'string') setResolution(controls.resolution);
+  if (controls.axis === 'h' || controls.axis === 'v') setAxis(controls.axis);
+  slitCenter.value = String(clampRange(controls.slitCenter, 0, 1, 0.5));
+  slitWidth.value = String(clampRange(controls.slitWidth, 0.005, 0.5, 0.04));
+  scanSpeed.value = String(clampRange(controls.scanSpeed, 0, 5, 1));
+  audioGain.value = String(clampRange(controls.audioGain, 0, 1, 0.5));
+  audioMix.value = String(clampRange(controls.audioMix, 0, 1, 1));
+
+  if (preset.visualSource?.mode === 'scene' && typeof preset.visualSource.scene === 'string') {
+    setScene(preset.visualSource.scene);
+  } else if (preset.visualSource?.mode === 'video' && !activateVideoVisualSource()) {
+    notes.push('upload movie to restore video source');
+  }
+
+  const routeEntries = Array.isArray(preset.routes) ? preset.routes : [];
+  for (const routeState of routeEntries) {
+    const route = routesById[routeState.id];
+    if (!route) continue;
+    if (routeState.tap === 'source' || routeState.tap === 'feedback') {
+      setRouteTap(route.id, routeState.tap);
+    }
+    if (typeof routeState.depth === 'number') {
+      setRouteDepth(route.id, routeState.depth);
+    }
+  }
+
+  if (typeof preset.audioSource === 'string' && !selectAudioSource(preset.audioSource)) {
+    if (preset.audioSource === 'file') notes.push('upload audio to restore file source');
+    else if (preset.audioSource === 'video') notes.push('upload movie to restore movie audio');
+  }
+
+  updateLabels();
+  if (audioOn) pushAudioParams();
+
+  const label = options.label || 'preset loaded';
+  setPresetStatus(notes.length ? `${label} · ${notes.join(' · ')}` : `${label} · ready`, notes.length > 0);
+}
+
+function savePresetSlot() {
+  const slot = normalizePresetSlotName();
+  const preset = collectPreset();
+  localStorage.setItem(`${PRESET_STORAGE_PREFIX}${slot}`, JSON.stringify(preset));
+  writePresetHash(preset);
+  setPresetStatus(`slot saved · ${slot}`, false);
+}
+
+function loadPresetSlot() {
+  const slot = normalizePresetSlotName();
+  const raw = localStorage.getItem(`${PRESET_STORAGE_PREFIX}${slot}`);
+  if (!raw) {
+    setPresetStatus(`slot missing · ${slot}`, true);
+    return false;
+  }
+  applyPreset(JSON.parse(raw), { label: `slot loaded · ${slot}` });
+  writePresetHash(collectPreset());
+  return true;
+}
+
+function loadPresetFromHash() {
+  const encoded = presetHashValue();
+  if (!encoded) {
+    setPresetStatus('no preset hash present', true);
+    return false;
+  }
+  applyPreset(decodePreset(encoded), { label: 'hash loaded' });
+  return true;
+}
+
+async function copyPresetLink() {
+  const url = writePresetHash(collectPreset());
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(url);
+    setPresetStatus('preset link copied', false);
+  } else {
+    setPresetStatus('hash updated · clipboard unavailable', false);
+  }
+}
+
 /* ============================================================
    BOOT
    ============================================================ */
@@ -1889,18 +2136,11 @@ panicBtn?.addEventListener('click', panicFeedback);
 minimalLoopBtn?.addEventListener('click', engageMinimalLoop);
 
 resSelect.addEventListener('change', () => {
-  const [w, h] = resSelect.value.split(',').map(Number);
-  width = w; height = h;
-  const old = sourceTexture;
-  initThree();
-  clearVisualFeedback();
-  sourceTexture = old;
-  simMaterial.uniforms.uSource.value = sourceTexture;
-  updateStatus();
+  setResolution(resSelect.value);
 });
 
-axisHBtn.addEventListener('click', () => { axis = 'h'; axisHBtn.classList.add('primary'); axisVBtn.classList.remove('primary'); });
-axisVBtn.addEventListener('click', () => { axis = 'v'; axisVBtn.classList.add('primary'); axisHBtn.classList.remove('primary'); });
+axisHBtn.addEventListener('click', () => setAxis('h'));
+axisVBtn.addEventListener('click', () => setAxis('v'));
 
 audioToggleBtn.addEventListener('click', () => audioOn ? stopAudio() : startAudio());
 resetAudioBtn.addEventListener('click', () => { if (workletNode) workletNode.port.postMessage({ type: 'reset' }); });
@@ -1912,19 +2152,46 @@ document.querySelectorAll('button[data-asource]').forEach(btn => btn.addEventLis
     errorBox.textContent = 'Upload a movie first to use Movie audio.';
     return;
   }
-  if (audioOn) buildSource(kind);
-  else {
-    currentSourceType = kind;
-    document.querySelectorAll('button[data-asource]').forEach(b => b.classList.toggle('primary', b === btn));
-  }
+  selectAudioSource(kind);
 }));
 audioFileInput.addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   audioFile = f;
-  if (audioOn) buildSource('file');
-  else currentSourceType = 'file';
+  selectAudioSource('file');
 });
+
+presetSlotName?.addEventListener('change', normalizePresetSlotName);
+copyPresetBtn?.addEventListener('click', () => {
+  copyPresetLink().catch(err => setPresetStatus(`copy failed · ${err.message}`, true));
+});
+loadPresetBtn?.addEventListener('click', () => {
+  try {
+    loadPresetFromHash();
+  } catch (err) {
+    setPresetStatus(`hash failed · ${err.message}`, true);
+  }
+});
+saveSlotBtn?.addEventListener('click', () => {
+  try {
+    savePresetSlot();
+  } catch (err) {
+    setPresetStatus(`save failed · ${err.message}`, true);
+  }
+});
+loadSlotBtn?.addEventListener('click', () => {
+  try {
+    loadPresetSlot();
+  } catch (err) {
+    setPresetStatus(`load failed · ${err.message}`, true);
+  }
+});
+
+try {
+  if (presetHashValue()) loadPresetFromHash();
+} catch (err) {
+  setPresetStatus(`startup hash failed · ${err.message}`, true);
+}
 
 window.addEventListener('beforeunload', () => {
   if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);

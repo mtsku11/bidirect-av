@@ -336,6 +336,8 @@ Acceptance criteria:
 
 ### Phase 5 — Presets, logging, and reproducibility
 
+Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload, and the preset library plus broader logged sessions are still pending.
+
 Goals:
 
 - Add preset save/recall through JSON, URL hash, or localStorage.
@@ -632,6 +634,7 @@ Mitigation:
 - [x] Add panic, ramp, attenuation, and feedback depth cap.
 - [x] Add lockup/runaway stability indicator.
 - [x] Record the first minimal-loop test session and begin the findings log.
+- [x] Add preset save/recall through URL hash and local slot names.
 - [ ] Start a paper notes document with headings from the proposed NIME structure.
 
 ## 11. Definition of done

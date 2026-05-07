@@ -176,7 +176,7 @@ Feedback routing uses safety transforms before modulation: route depth is capped
 This is a single self-contained HTML file. There are no external assets — Three.js loads from a CDN, and the audio worklet ships inline as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
 
 ```
-slitscan-av.html    ~1600 lines
+slitscan-av.html    ~2200 lines
 ├── <style>          theme variables, layout, typography
 ├── markup           sidebar controls + main stage
 └── <script>         module
@@ -200,13 +200,32 @@ The artifact iframe sandbox in some embedded contexts blocks `getUserMedia()` �
 
 ---
 
+## Presets
+
+The sidebar now includes a small preset panel:
+
+- `Copy link` writes the current state into the URL hash and attempts to copy the shareable link.
+- `Save slot` / `Load slot` store and restore named presets through `localStorage`.
+- `Load hash` reapplies the current URL hash without relying on browser history state.
+
+Preset capture currently includes:
+
+- Built-in visual source selection.
+- Built-in audio source selection.
+- Base slit, gain, mix, axis, and resolution controls.
+- Per-route tap selection and route depth.
+
+Uploaded movie and audio files are not serialized, so shared hashes remain structural rather than asset-complete.
+
+---
+
 ## Known limitations
 
 - Phone CPUs may chug at 1280×720 with audio enabled. Drop visual resolution to 640×480 if FPS drops.
 - iPhone HEVC video files often fail to decode in browser. Re-encode or change capture format.
 - The Pulse source has no fixed seed, so identical settings won't reproduce identical sound across sessions.
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
-- No preset save/recall yet. All settings reset on page reload.
+- Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 
 ---
 
@@ -295,8 +314,6 @@ Roads we discussed but haven't taken (the reciprocal feedback layer is the major
 **Channel-split slit.** Apply the slit-scan separately to R, G, B (or stereo L, R) with different positions per channel. Produces chromatic-aberration-style temporal displacement.
 
 **Optical flow.** Replace the frame-difference motion estimator with a real Lucas-Kanade or Farnebäck optical flow. Gives directional motion vectors, which open up motion-direction-driven modulations (horizontal motion biases one parameter, vertical motion biases another).
-
-**Preset save / recall.** Serialize the current control values to URL hash or `localStorage` for sharing settings between sessions and with others.
 
 **Live webcam mode.** The original goal of the project. Trivially supported by the architecture — replace `CanvasTexture(sourceCanvas)` with `VideoTexture(getUserMediaStream)`. Requires running outside a sandboxed iframe.
 
