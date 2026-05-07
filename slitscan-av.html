@@ -557,19 +557,107 @@ const A = {
   visual: { brightness: 0, motion: 0, hue: 0.5 },
 };
 
-// modulation depths
-const M = {
-  audAmpToVisSpeed: 0.5,
-  audCentroidToVisPos: 0.5,
-  audOnsetToVisClear: 0.3,
-  visMotionToAudSpeed: 0.5,
-  visBrightToAudGain: 0.3,
-  visHueToAudSlit: 0.5,
-};
+const ROUTES = [
+  {
+    id: 'audAmpToVisSpeed',
+    sourceDomain: 'audio',
+    sourceFeature: 'amplitude',
+    analysisTap: 'source',
+    targetDomain: 'visual',
+    targetParam: 'scanSpeed',
+    controlId: 'modA1',
+    valueId: 'modA1Val',
+    meterId: 'meterA1',
+    defaultDepth: 0.5,
+    depth: 0.5,
+  },
+  {
+    id: 'audCentroidToVisPos',
+    sourceDomain: 'audio',
+    sourceFeature: 'centroid',
+    analysisTap: 'source',
+    targetDomain: 'visual',
+    targetParam: 'slitPosition',
+    controlId: 'modA2',
+    valueId: 'modA2Val',
+    meterId: 'meterA2',
+    defaultDepth: 0.5,
+    depth: 0.5,
+  },
+  {
+    id: 'audOnsetToVisClear',
+    sourceDomain: 'audio',
+    sourceFeature: 'onset',
+    analysisTap: 'source',
+    targetDomain: 'visual',
+    targetParam: 'clear',
+    controlId: 'modA3',
+    valueId: 'modA3Val',
+    meterId: 'meterA3',
+    defaultDepth: 0.3,
+    depth: 0.3,
+  },
+  {
+    id: 'visMotionToAudSpeed',
+    sourceDomain: 'visual',
+    sourceFeature: 'motion',
+    analysisTap: 'source',
+    targetDomain: 'audio',
+    targetParam: 'scanSpeed',
+    controlId: 'modV1',
+    valueId: 'modV1Val',
+    meterId: 'meterV1',
+    defaultDepth: 0.5,
+    depth: 0.5,
+  },
+  {
+    id: 'visBrightToAudGain',
+    sourceDomain: 'visual',
+    sourceFeature: 'brightness',
+    analysisTap: 'source',
+    targetDomain: 'audio',
+    targetParam: 'gain',
+    controlId: 'modV2',
+    valueId: 'modV2Val',
+    meterId: 'meterV2',
+    defaultDepth: 0.3,
+    depth: 0.3,
+  },
+  {
+    id: 'visHueToAudSlit',
+    sourceDomain: 'visual',
+    sourceFeature: 'hue',
+    analysisTap: 'source',
+    targetDomain: 'audio',
+    targetParam: 'slitPosition',
+    controlId: 'modV3',
+    valueId: 'modV3Val',
+    meterId: 'meterV3',
+    defaultDepth: 0.5,
+    depth: 0.5,
+  },
+];
+
+const routesById = Object.fromEntries(ROUTES.map(route => [route.id, route]));
 
 // helpers
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = v => Math.max(0, Math.min(1, v));
+
+function routeDepth(id) {
+  return routesById[id]?.depth ?? 0;
+}
+
+function setRouteDepth(id, value) {
+  const route = routesById[id];
+  if (!route) return;
+  route.depth = clamp01(Number.parseFloat(value) || 0);
+}
+
+function routeValue(route) {
+  // Feedback taps will branch here once processed-output analyzers exist.
+  return A[route.sourceDomain]?.[route.sourceFeature] ?? 0;
+}
 
 /* ============================================================
    VISUAL — procedural source canvas + slit-scan shader
@@ -1118,11 +1206,11 @@ function pushAudioParams() {
   const baseScan   = parseFloat(scanSpeed.value);
 
   // visual hue (centered on 0.5) modulates audio slit position
-  const hueMod = (A.visual.hue - 0.5) * 0.6 * M.visHueToAudSlit; // ±0.3 max
+  const hueMod = (A.visual.hue - 0.5) * 0.6 * routeDepth('visHueToAudSlit'); // ±0.3 max
   const audioCenter = clamp01(baseCenter + hueMod);
 
   // visual motion adds to scan speed
-  const motionAdd = A.visual.motion * 3.0 * M.visMotionToAudSpeed; // up to +3
+  const motionAdd = A.visual.motion * 3.0 * routeDepth('visMotionToAudSpeed'); // up to +3
   const audioScan = baseScan + motionAdd;
 
   const cBin = sliderToBin(audioCenter, audioCtx.sampleRate);
@@ -1139,7 +1227,7 @@ function pushAudioParams() {
   // visual brightness modulates audio gain
   if (masterGain) {
     const baseG = parseFloat(audioGain.value);
-    const depth = M.visBrightToAudGain;
+    const depth = routeDepth('visBrightToAudGain');
     const gMul = (1 - depth) + A.visual.brightness * depth; // depth=0 → 1.0; depth=1 → brightness
     masterGain.gain.setTargetAtTime(baseG * gMul, audioCtx.currentTime, 0.05);
   }
@@ -1189,15 +1277,15 @@ function computeVisualParams() {
   const baseScan   = parseFloat(scanSpeed.value);
 
   // audio centroid (centered on 0.5) modulates visual slit position
-  const centMod = (A.audio.centroid - 0.5) * 0.6 * M.audCentroidToVisPos; // ±0.3
+  const centMod = (A.audio.centroid - 0.5) * 0.6 * routeDepth('audCentroidToVisPos'); // ±0.3
   const visCenter = clamp01(baseCenter + centMod);
 
   // audio amplitude adds to scan speed
-  const ampAdd = A.audio.amplitude * 3.0 * M.audAmpToVisSpeed; // up to +3
+  const ampAdd = A.audio.amplitude * 3.0 * routeDepth('audAmpToVisSpeed'); // up to +3
   const visScan = baseScan + ampAdd;
 
   // onset triggers clear
-  const clearAmount = A.audio.onset * M.audOnsetToVisClear;
+  const clearAmount = A.audio.onset * routeDepth('audOnsetToVisClear');
 
   return { visCenter, visW: baseW, visScan, clearAmount };
 }
@@ -1240,12 +1328,10 @@ function drawSpectro() {
    METERS — show live analysis values in the cross-mod panels
    ============================================================ */
 function updateMeters() {
-  document.getElementById('meterA1').style.width = (A.audio.amplitude * 100).toFixed(0) + '%';
-  document.getElementById('meterA2').style.width = (A.audio.centroid  * 100).toFixed(0) + '%';
-  document.getElementById('meterA3').style.width = (A.audio.onset     * 100).toFixed(0) + '%';
-  document.getElementById('meterV1').style.width = (A.visual.motion     * 100).toFixed(0) + '%';
-  document.getElementById('meterV2').style.width = (A.visual.brightness * 100).toFixed(0) + '%';
-  document.getElementById('meterV3').style.width = (A.visual.hue        * 100).toFixed(0) + '%';
+  for (const route of ROUTES) {
+    const meter = document.getElementById(route.meterId);
+    if (meter) meter.style.width = (routeValue(route) * 100).toFixed(0) + '%';
+  }
 }
 
 /* ============================================================
@@ -1380,12 +1466,10 @@ const updateLabels = () => {
   document.getElementById('scanSpeedVal').textContent  = parseFloat(scanSpeed.value).toFixed(2);
   document.getElementById('audioGainVal').textContent  = parseFloat(audioGain.value).toFixed(2);
   document.getElementById('audioMixVal').textContent   = parseFloat(audioMix.value).toFixed(2);
-  document.getElementById('modA1Val').textContent = M.audAmpToVisSpeed.toFixed(2);
-  document.getElementById('modA2Val').textContent = M.audCentroidToVisPos.toFixed(2);
-  document.getElementById('modA3Val').textContent = M.audOnsetToVisClear.toFixed(2);
-  document.getElementById('modV1Val').textContent = M.visMotionToAudSpeed.toFixed(2);
-  document.getElementById('modV2Val').textContent = M.visBrightToAudGain.toFixed(2);
-  document.getElementById('modV3Val').textContent = M.visHueToAudSlit.toFixed(2);
+  for (const route of ROUTES) {
+    const value = document.getElementById(route.valueId);
+    if (value) value.textContent = route.depth.toFixed(2);
+  }
 };
 
 [slitCenter, slitWidth, scanSpeed, audioMix].forEach(el => el.addEventListener('input', updateLabels));
@@ -1393,17 +1477,16 @@ audioGain.addEventListener('input', updateLabels);
 updateLabels();
 
 // modulation depth sliders
-const bindMod = (id, key) => {
-  const el = document.getElementById(id);
-  el.value = M[key];
-  el.addEventListener('input', () => { M[key] = parseFloat(el.value); updateLabels(); });
+const bindRouteDepth = (route) => {
+  const el = document.getElementById(route.controlId);
+  if (!el) return;
+  el.value = route.depth;
+  el.addEventListener('input', () => {
+    setRouteDepth(route.id, el.value);
+    updateLabels();
+  });
 };
-bindMod('modA1', 'audAmpToVisSpeed');
-bindMod('modA2', 'audCentroidToVisPos');
-bindMod('modA3', 'audOnsetToVisClear');
-bindMod('modV1', 'visMotionToAudSpeed');
-bindMod('modV2', 'visBrightToAudGain');
-bindMod('modV3', 'visHueToAudSlit');
+ROUTES.forEach(bindRouteDepth);
 
 resSelect.addEventListener('change', () => {
   const [w, h] = resSelect.value.split(',').map(Number);
