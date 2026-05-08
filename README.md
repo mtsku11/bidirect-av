@@ -76,6 +76,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 - `loudness → scan speed` — amplitude (RMS) of audio adds to the visual scan speed.
 - `centroid → slit position` — spectral centroid shifts the visual slit horizontally.
 - `onsets → clear` — percussive hits in audio briefly clear the visual feedback.
+- `spread → slit width` — spectral spread widens the visual slit, admitting more fresh source when the audio spectrum broadens.
 
 **Visual drives audio:**
 - `motion → scan speed` — frame-to-frame pixel difference adds to audio scan speed.
@@ -84,7 +85,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button sets up the more mobile hue pair: audio feedback centroid to visual slit position plus visual feedback hue to audio slit position, both at depth `0.15`. That hue path now uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button now uses the broader-performing spread pair: audio feedback spread to visual slit width at depth `0.18`, plus visual feedback hue to audio slit position at depth `0.15`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -228,10 +229,10 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The new hue-based Explorer loop is still not a universal quick-start after the wrap-safe hue fix. Under a cleared-smear re-screen, only `Marquee + Pulse` and `Bouncers + Pulse` stayed mobile; `Cars + Pad`, `Cars + Pulse`, `Marquee + Pad`, and `Bouncers + Pad` all converged to lockup.
+- The current spread+hue Explorer loop is still not universal. It broadened coverage to `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`, but `Cars + Pad` and `Cars + Pulse` still converge to lockup.
 - Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening.
 - Replacing the Explorer loop's audio-feedback leg with amplitude-to-visual-speed also failed to broaden coverage, and the smallest hybrid test adding weak source amplitude assist to the current Explorer pair did not unlock the `Cars` or Pad-based lockups.
-- The next worthwhile step is now structural rather than parametric: add a new feedback-capable route or derived feature, because the current built-in route family is not yielding a universal Explorer quick-start.
+- Adding the new `spread -> slit width` route materially improved the Explorer family, but the remaining `Cars` lockup means the quick-start is still scene-dependent.
 
 ---
 

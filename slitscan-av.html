@@ -391,6 +391,7 @@ input[type=file] { display: none; }
           <div class="feature">vis hue</div><div class="source" id="tapVisHueSource">0.50</div><div class="feedback" id="tapVisHueFeedback">0.50</div>
           <div class="feature">aud amp</div><div class="source" id="tapAudAmpSource">0.00</div><div class="feedback" id="tapAudAmpFeedback">0.00</div>
           <div class="feature">aud centroid</div><div class="source" id="tapAudCentroidSource">0.50</div><div class="feedback" id="tapAudCentroidFeedback">0.50</div>
+          <div class="feature">aud spread</div><div class="source" id="tapAudSpreadSource">0.00</div><div class="feedback" id="tapAudSpreadFeedback">0.00</div>
           <div class="feature">aud onset</div><div class="source" id="tapAudOnsetSource">0.00</div><div class="feedback" id="tapAudOnsetFeedback">0.00</div>
         </div>
       </div>
@@ -435,6 +436,13 @@ input[type=file] { display: none; }
           <input type="range" id="modA3" min="0" max="1" step="0.01" value="0.3">
           <div class="route-controls"><select id="tapA3"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampA3">src</span></div>
           <div class="meter"><span id="meterA3"></span></div>
+        </div>
+
+        <div class="modline">
+          <div class="arrow"><span><span class="src">spread</span> <span class="arr">→</span> <span class="dst">slit width</span></span><span class="v" id="modA4Val">0.00</span></div>
+          <input type="range" id="modA4" min="0" max="1" step="0.01" value="0">
+          <div class="route-controls"><select id="tapA4"><option value="source">source</option><option value="feedback">feedback</option></select><span class="ramp" id="rampA4">src</span></div>
+          <div class="meter"><span id="meterA4"></span></div>
         </div>
       </div>
 
@@ -687,7 +695,7 @@ const stabilityStatus = document.getElementById('stabilityStatus');
    ANALYSIS HUB
    Holds live analyzed values, smoothed, normalized 0..1
    ============================================================ */
-const makeAudioAnalysis = () => ({ amplitude: 0, centroid: 0.5, onset: 0 });
+const makeAudioAnalysis = () => ({ amplitude: 0, centroid: 0.5, spread: 0, onset: 0 });
 const makeVisualAnalysis = () => ({ brightness: 0, motion: 0, hue: 0.5 });
 
 const analysisTaps = {
@@ -766,6 +774,23 @@ const ROUTES = [
     rampId: 'rampA3',
     defaultDepth: 0.3,
     depth: 0.3,
+    feedbackRamp: 0,
+    feedbackValue: 0,
+  },
+  {
+    id: 'audSpreadToVisWidth',
+    sourceDomain: 'audio',
+    sourceFeature: 'spread',
+    analysisTap: 'source',
+    targetDomain: 'visual',
+    targetParam: 'slitWidth',
+    controlId: 'modA4',
+    tapControlId: 'tapA4',
+    valueId: 'modA4Val',
+    meterId: 'meterA4',
+    rampId: 'rampA4',
+    defaultDepth: 0,
+    depth: 0,
     feedbackRamp: 0,
     feedbackValue: 0,
   },
@@ -1623,25 +1648,29 @@ function pushAudioParams() {
 }
 
 /* ============================================================
-   AUDIO ANALYSIS — amplitude, centroid, onset (spectral flux)
+   AUDIO ANALYSIS — amplitude, centroid, spread, onset
    ============================================================ */
 function analyzeAudioAnalyser(analyser, data, prev, target, tapName = 'source') {
   if (!analyser || !data || !prev) return;
   analyser.getByteFrequencyData(data);
   const N = data.length;
 
-  let sum = 0, weighted = 0, total = 0;
+  let sum = 0, weighted = 0, weightedSq = 0, total = 0;
   let flux = 0;
   for (let i = 0; i < N; i++) {
     const v = data[i] / 255;
     sum += v * v;
     weighted += v * i;
+    weightedSq += v * i * i;
     total += v;
     const dv = v - prev[i] / 255;
     if (dv > 0) flux += dv;
   }
   const newAmp = Math.sqrt(sum / N);          // RMS-ish (0..1)
-  const newCentroid = total > 0 ? (weighted / total) / N : 0.5; // 0..1
+  const centroidIndex = total > 0 ? weighted / total : N * 0.5;
+  const newCentroid = centroidIndex / N; // 0..1
+  const spreadVariance = total > 0 ? Math.max(0, weightedSq / total - centroidIndex * centroidIndex) : 0;
+  const newSpread = clamp01(Math.sqrt(spreadVariance) / (N * 0.28));
   // onset: compare flux to running mean
   // (cheap thresholding — proper onset detection would whiten + adapt)
   const onsetRaw = clamp01((flux - 0.5) * 0.3); // crude but works
@@ -1651,9 +1680,11 @@ function analyzeAudioAnalyser(analyser, data, prev, target, tapName = 'source') 
   const isFeedback = tapName === 'feedback';
   const ampSmooth = isFeedback ? 0.14 : 0.3;
   const centroidSmooth = isFeedback ? 0.07 : 0.15;
+  const spreadSmooth = isFeedback ? 0.09 : 0.18;
   const onsetRelease = isFeedback ? 0.92 : 0.85;
   target.amplitude = lerp(target.amplitude, newAmp, ampSmooth);
   target.centroid  = lerp(target.centroid, newCentroid, centroidSmooth);
+  target.spread    = lerp(target.spread, newSpread, spreadSmooth);
   // onset uses a fast attack, slow release
   target.onset = onsetRaw > target.onset
     ? onsetRaw
@@ -1674,11 +1705,16 @@ function computeVisualParams() {
   const baseScan   = parseFloat(scanSpeed.value);
   const centroid = routeValue(routesById.audCentroidToVisPos);
   const amplitude = routeValue(routesById.audAmpToVisSpeed);
+  const spread = routeValue(routesById.audSpreadToVisWidth);
   const onset = routeValue(routesById.audOnsetToVisClear);
 
   // audio centroid (centered on 0.5) modulates visual slit position
   const centMod = (centroid - 0.5) * 0.6 * routeDepth('audCentroidToVisPos'); // ±0.3
   const visCenter = clamp01(baseCenter + centMod);
+
+  // audio spread widens the visual slit so broader spectra admit more fresh source
+  const spreadAdd = spread * 0.18 * routeDepth('audSpreadToVisWidth');
+  const visW = Math.min(0.5, Math.max(0.005, baseW + spreadAdd));
 
   // audio amplitude adds to scan speed
   const ampAdd = amplitude * 3.0 * routeDepth('audAmpToVisSpeed'); // up to +3
@@ -1687,7 +1723,7 @@ function computeVisualParams() {
   // onset triggers clear
   const clearAmount = onset * routeDepth('audOnsetToVisClear');
 
-  return { visCenter, visW: baseW, visScan, clearAmount };
+  return { visCenter, visW, visScan, clearAmount };
 }
 
 /* ============================================================
@@ -1746,6 +1782,8 @@ function updateTapDebug() {
     ['tapAudAmpFeedback', analysisTaps.feedback.audio.amplitude],
     ['tapAudCentroidSource', analysisTaps.source.audio.centroid],
     ['tapAudCentroidFeedback', analysisTaps.feedback.audio.centroid],
+    ['tapAudSpreadSource', analysisTaps.source.audio.spread],
+    ['tapAudSpreadFeedback', analysisTaps.feedback.audio.spread],
     ['tapAudOnsetSource', analysisTaps.source.audio.onset],
     ['tapAudOnsetFeedback', analysisTaps.feedback.audio.onset],
   ];
@@ -2163,10 +2201,10 @@ function engageMinimalLoop() {
 }
 
 function engageExplorerLoop() {
-  // Hue feedback stays more mobile than brightness feedback on Marquee and Bouncers,
-  // so keep the starting depth slightly lower for a gentler exploratory pair.
+  // Audio spread widens the visual slit when the post-worklet spectrum broadens,
+  // which proved more mobile than the old centroid-position explorer pair.
   configureFeedbackQuickstart([
-    { id: 'audCentroidToVisPos', depth: 0.15 },
+    { id: 'audSpreadToVisWidth', depth: 0.18 },
     { id: 'visHueToAudSlit', depth: 0.15 },
   ]);
 }
