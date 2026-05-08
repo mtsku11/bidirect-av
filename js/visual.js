@@ -14,14 +14,6 @@ const ANA_W = 64, ANA_H = 36;
 const CARS_SCENE_SEED = 0x43415231;
 const BOUNCERS_SCENE_SEED = 0x424f554e;
 
-function createSeededRng(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 0x100000000;
-  };
-}
-
 function makeVisualAnalysisBuffer() {
   const canvas = document.createElement('canvas');
   canvas.width = ANA_W; canvas.height = ANA_H;

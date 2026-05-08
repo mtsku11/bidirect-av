@@ -4,9 +4,15 @@
 async function loadVideoFile(file) {
   try {
     errorBox.style.display = 'none';
+    const shouldResumeMovieAudio = audioOn && currentSourceType === 'video';
+    if (shouldResumeMovieAudio) disposeCurrentSource();
     if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
     if (videoEl) {
-      try { videoEl.pause(); } catch(e){}
+      try {
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        videoEl.load();
+      } catch(e){}
       // Note: we do NOT reuse videoEl because MediaElementSource is bound to it.
       // Create fresh element each upload.
     }
@@ -27,10 +33,22 @@ async function loadVideoFile(file) {
     useVideoSource = true;
     document.querySelectorAll('button[data-scene]').forEach(b => b.classList.remove('primary'));
 
-    // Detect audio track. webkitAudioDecodedByteCount works on Chromium; otherwise we just enable the button.
-    videoHasAudio = !!(videoEl.audioTracks && videoEl.audioTracks.length) || true; // be permissive
+    // Browser media-track probes are inconsistent, so keep the Movie button
+    // available while still recording the best hint we can about whether the
+    // upload actually carries audio.
+    const supportsTrackProbe = !!(videoEl.audioTracks && typeof videoEl.audioTracks.length === 'number')
+      || typeof videoEl.webkitAudioDecodedByteCount === 'number'
+      || typeof videoEl.mozHasAudio === 'boolean';
+    const hasDeclaredTrack = !!(videoEl.audioTracks && videoEl.audioTracks.length);
+    const hasDecodedAudioHint = typeof videoEl.webkitAudioDecodedByteCount === 'number'
+      ? videoEl.webkitAudioDecodedByteCount > 0
+      : typeof videoEl.mozHasAudio === 'boolean'
+        ? videoEl.mozHasAudio
+        : false;
+    videoHasAudio = supportsTrackProbe ? (hasDeclaredTrack || hasDecodedAudioHint) : true;
     videoAudioBtn.disabled = false;
 
+    if (shouldResumeMovieAudio && audioOn) buildSource('video');
     updateStatus();
   } catch (e) {
     console.error(e);
@@ -230,4 +248,3 @@ async function copyPresetLink() {
     setPresetStatus('hash updated · clipboard unavailable', false);
   }
 }
-

@@ -89,7 +89,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button uses the current best spread pair: audio feedback spread to visual slit width plus visual feedback hue to audio slit position. For seeded built-in sources it keeps the built-in start: spread depth `0.18`, hue depth `0.15`. When the current audio source is **Pulse**, the quick-start also narrows the base slit to `0.03` and lowers dry/wet to `0.85`. When the current audio source is **Movie** or **Upload audio**, the quick-start now uses a weaker upload branch: spread depth `0.12`, slit width `0.03`, dry/wet `0.90`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. With seeded built-in sources and scenes, the built-in Explorer branch reproduces cleanly on `Marquee` and `Bouncers` with both `Pad` and `Pulse`; the upload branch now clears three of the four generated upload-suite cases. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button is a convenience spread+hue quick-start: audio feedback spread to visual slit width plus visual feedback hue to audio slit position. For seeded built-in sources it keeps the built-in start: spread depth `0.18`, hue depth `0.15`. When the current audio source is **Pulse**, the quick-start also narrows the base slit to `0.03` and lowers dry/wet to `0.85`. When the current audio source is **Movie** or **Upload audio**, the quick-start now uses a weaker upload branch: spread depth `0.12`, slit width `0.03`, dry/wet `0.90`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. With seeded built-in sources and scenes, the built-in Explorer branch reproduces cleanly on `Marquee` and `Bouncers` with both `Pad` and `Pulse`; the upload branch now clears three of the four generated upload-suite cases. The preset library is the source of truth for named starts and failure-mode examples. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -221,6 +221,8 @@ The sidebar now includes a small preset panel:
 - `Load hash` reapplies the current URL hash without relying on browser history state.
 - Curated reference hashes now live in `presets/library.md`.
 
+Treat `presets/library.md` as the reproducible research-facing entry point. The sidebar `Explorer loop` button is a convenience start, not a claim that one feedback pair should fit every source family.
+
 Preset capture currently includes:
 
 - Built-in visual source selection.
@@ -232,7 +234,7 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 
 ---
 
-## Known limitations
+## Known limitations and current findings
 
 - Phone CPUs may chug at 1280×720 with audio enabled. Drop visual resolution to 640×480 if FPS drops.
 - iPhone HEVC video files often fail to decode in browser. Re-encode or change capture format.
@@ -240,40 +242,41 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The current spread+hue Explorer loop is still not universal. After making the built-in synth sources and stochastic built-in scenes deterministic, it now reproduces cleanly under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Walker` remains outside the regression set, and `Cars` remains outside the supported Explorer family: a seeded rerun still flips between hue lockup and spread runaway.
-- The generated upload challenge suite still exposes a remaining gap. After adopting a weaker upload-specific Explorer branch, `life-color-pulse.mp4 + Movie`, `Marquee + speech-count.wav`, and `Bouncers + noise-pulse.wav` are now stable under the generated test protocol, but `low-sat-pan-speech.mp4 + Movie` still locks on hue. The next likely fix is to weaken or replace the hue leg specifically for low-saturation uploaded movie cases rather than assume the current second leg generalizes.
+- The current spread+hue Explorer loop is not universal. After making the built-in synth sources and stochastic built-in scenes deterministic, it reproduces cleanly under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Walker` remains outside the regression set, and `Cars` remains outside the supported Explorer family: a seeded rerun still flips between hue lockup and spread runaway. These are current source-family findings, not proof that the instrument is unfinished.
+- The generated upload challenge suite still exposes a remaining gap. After adopting a weaker upload-specific Explorer branch, `life-color-pulse.mp4 + Movie`, `Marquee + speech-count.wav`, and `Bouncers + noise-pulse.wav` are stable under the generated test protocol, but `low-sat-pan-speech.mp4 + Movie` still locks on hue. That low-saturation movie failure is currently being treated as a documented finding and a targeted follow-up, not a reason to keep chasing one universal quick-start.
 - Earlier motion, brightness, amplitude, and weak-hybrid Explorer alternatives were screened before the visual-determinism fix and none is currently promoted over the spread+hue quick-start. If the present built-in coverage regresses later, those alternatives should be re-screened from the seeded baseline rather than assumed settled.
 - Adding the new `spread -> slit width` route materially improved the Explorer family, but `Cars` still does not yield a reproducible Explorer preset inside the current spread+hue route family. Revisit it only after adding a new feedback-capable route or different control surface.
+- The highest-value project gaps are now evidence and packaging rather than another round of default-preset tuning: downloadable feature-trace export, per-route stability surfacing, smoke tests, paper notes, a live demo path, and a repository license.
 
 ---
 
-## Planned: reciprocal feedback layer
+## Reciprocal feedback design notes
 
-The cross-modulation built into the current version is *reactive* — each modulation is a function of the source signal. The next architectural step is to make the system *self-referential*: each domain analyzes its own processed output and modulates the other accordingly. The system gains internal state that evolves on its own, and starts behaving less like an effect chain and more like an instrument with its own inner life.
+The reciprocal feedback layer is already in the build in both minimal-loop and per-route forms. The notes below preserve the rationale behind the architecture, the failure modes it is meant to expose, and the remaining extensions that matter for research documentation.
 
-This section captures the design thinking before the implementation — the architectural delta, the failure modes, the damping strategy, and the minimal starting configuration.
+The instrument can now switch each route between source and processed-output analysis. The more important open work is no longer “can feedback exist?” but “how do we log, name, perform, and write about the behaviors it produces?”
 
 ### The shift
 
-Currently:
+In source-driven mode:
 
 - Visual analysis taps `sourceCanvas` (the unprocessed source).
 - Audio analysis taps an `AnalyserNode` placed *before* the worklet.
 
-In feedback mode:
+In reciprocal-feedback mode:
 
 - Visual analysis taps the slit-scan's *output* — either via `gl.readPixels` on the displayed framebuffer, or by rendering the current ping-pong target into a small offscreen 2D canvas (cheaper).
 - Audio analysis taps an `AnalyserNode` placed *after* the worklet.
 
 The cross-routing matrix stays the same — the same six modulations — but the values flowing through it are now post-effect, not pre-effect. The slit-scan's output becomes its own input, via the other domain.
 
-A `source / feedback` toggle should be available *per routing*, not as a global switch. Some routings might stay on source while others go to feedback, which gives the most expressive control surface and lets you mix open-loop reactivity with closed-loop autonomy.
+A `source / feedback` toggle is available *per routing*, not as a global switch. Some routings can stay on source while others go to feedback, which lets the instrument mix open-loop reactivity with closed-loop autonomy.
 
 ### Why damping is load-bearing
 
 Closed loops with effective gain greater than one diverge. Closed loops with effective gain less than one converge to silence. The interesting behavior lives in the narrow band between, where the loop sustains without locking up or running away — and damping mechanisms are what hold the system in that band.
 
-Three damping mechanisms to implement together:
+Three damping mechanisms now hold the feedback layer together:
 
 - **Slow follows.** The smoothing low-pass filters on analyzed values should be markedly slower in feedback mode than in source mode. If the loop responds in milliseconds, it locks instantly. If it responds over seconds, the system has time to evolve before the loop closes.
 - **Depth limits.** Modulation depths must be capped lower in feedback mode. A depth of 0.5 that feels gentle on source signals can be wildly unstable on feedback signals because the loop multiplies through itself each cycle. A reasonable starting cap is 0.3.
@@ -291,7 +294,7 @@ A small stability indicator in the UI watches the active feedback routes over a 
 
 ### Minimal first loop
 
-Don't enable all six modulations in feedback mode at once. The first build should engage one weakly-coupled bidirectional pair:
+The first reciprocal build intentionally avoided all six modulations at once and instead engaged one weakly-coupled bidirectional pair:
 
 - Audio output centroid → visual slit position (depth ≈ 0.2)
 - Visual output brightness → audio gain (depth ≈ 0.2)

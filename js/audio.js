@@ -24,17 +24,6 @@ const F_MIN = 80, F_MAX = 12000;
 const PAD_SOURCE_SEED = 0x50414431;
 const PULSE_SOURCE_SEED = 0x50554c31;
 
-function createSeededRng(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6D2B79F5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 function sliderToBin(v, sampleRate) {
   const hz = F_MIN * Math.pow(F_MAX / F_MIN, clamp01(v));
   return Math.round(hz / (sampleRate / FFT_SIZE));

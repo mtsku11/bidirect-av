@@ -31,10 +31,11 @@ Read these files in this order:
 4. `plan.md` for the research direction, development phases, acceptance criteria, and testing protocol.
 5. `TODO.md` for current build status, immediate implementation tasks, and known follow-ups.
 6. `presets/library.md` for the current curated structural starting points.
-7. `fixtures/challenge-suite/README.md` when uploaded-media screening or file-upload behavior is relevant.
-8. The most relevant file in `test-sessions/` for the current investigation thread.
-9. `suggested-reading.md` for academic framing and literature-reading priorities.
-10. `slitscan-av.html` and the relevant `js/*.js` files for implementation reality before changing code.
+7. `paper/notes.md` for the current paper structure, claims, evidence gaps, and findings synthesis.
+8. `fixtures/challenge-suite/README.md` when uploaded-media screening or file-upload behavior is relevant.
+9. The most relevant file in `test-sessions/` for the current investigation thread.
+10. `suggested-reading.md` for academic framing and literature-reading priorities.
+11. `slitscan-av.html` and the relevant `js/*.js` files for implementation reality before changing code.
 
 If a conversation decision must survive compaction, record it in the appropriate Markdown file before relying on it. If the Markdown files and implementation disagree, inspect the implementation, preserve user work, and update the relevant documentation as part of the change.
 
@@ -197,6 +198,13 @@ Avoid language such as:
 - “proves”
 - “solves audiovisual feedback”
 
+### 7.1 Research framing rules
+
+- Treat repeatable source-family failures as findings unless they block core safety or eliminate all usable presets.
+- Do not spend long stretches chasing one universal quick-start when named presets, logging, paper notes, smoke tests, or release packaging would move the project forward more directly.
+- Prefer named reproducible presets and logged sessions over informal claims that a button or quick-start “usually works”.
+- If changing deterministic built-ins later, separate regression comparability from performer-facing defaults intentionally rather than by accident.
+
 ## 8. Safety and stability rules for feedback features
 
 Any implementation of reciprocal feedback should include damping and recovery affordances from the start.
@@ -283,9 +291,10 @@ The agent should follow this broad sequence unless instructed otherwise:
 5. Add damping, ramping, attenuation, depth caps, and panic controls.
 6. Add stability indicators.
 7. Add presets and logging.
-8. Add Playwright smoke tests.
-9. Document findings.
-10. Support NIME paper writing.
+8. Add trace export and grow the paper notes.
+9. Add Playwright smoke tests and a live demo path.
+10. Document findings.
+11. Support NIME paper writing.
 
 ## 14. Standing instruction
 

@@ -4,6 +4,8 @@ Curated preset hashes captured from the current browser instrument. Append any h
 
 Built-in `Pad`/`Pulse` sources and the stochastic `Cars`/`Bouncers` scenes now reset from fixed seeds, so fresh-start reruns are much more meaningful than in the earlier screens.
 
+Treat this file, not the sidebar `Explorer loop` button, as the reproducible entry point for sessions, demos, and paper examples. The button is a convenience quick-start; the named presets below are the research-facing artifacts.
+
 ## Reference presets
 
 ### `source-default-cars-pad`
@@ -30,7 +32,7 @@ These presets use the current exploratory quick-start pair:
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-After fixing both built-in source determinism and stochastic built-in scene determinism, the current Explorer quick-start now reproduces across the core `Marquee` and `Bouncers` built-in cases with both `Pad` and `Pulse`. `Cars` and `Walker` remain outside the supported set. See `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md` and `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`.
+After fixing both built-in source determinism and stochastic built-in scene determinism, the current Explorer quick-start now reproduces across the core `Marquee` and `Bouncers` built-in cases with both `Pad` and `Pulse`. `Cars` and `Walker` remain outside the supported set. Those failures are currently being treated as source-family findings rather than hidden behind more preset retuning. See `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md` and `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`.
 
 The first generated upload challenge-suite screen is logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`, and the retuned upload-specific Explorer branch is logged in `test-sessions/2026-05-08-upload-explorer-retune-screen.md`. The current upload branch uses spread depth `0.12`, slit width `0.03`, and dry/wet `0.90` for `Movie` and `Upload audio`.
 

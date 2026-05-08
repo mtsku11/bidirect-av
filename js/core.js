@@ -69,6 +69,19 @@ const RUNAWAY_HIGH_THRESHOLD = 0.97;
 const PRESET_SCHEMA_VERSION = 1;
 const PRESET_STORAGE_PREFIX = 'slitscan-av:preset:';
 
+// Shared deterministic RNG for repeatable regression screens. Keep this helper
+// centralized so audio and visual sources do not silently diverge.
+function createSeededRng(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 const ROUTES = [
   {
     id: 'audAmpToVisSpeed',
@@ -360,4 +373,3 @@ function updateStabilityIndicator(nowSeconds) {
   stabilityState.routeId = null;
   stabilityState.routeLabel = null;
 }
-
