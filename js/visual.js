@@ -11,6 +11,17 @@ previewCanvas.width = 240; previewCanvas.height = 135;
 
 // small offscreen canvases for source and processed-output visual analysis
 const ANA_W = 64, ANA_H = 36;
+const CARS_SCENE_SEED = 0x43415231;
+const BOUNCERS_SCENE_SEED = 0x424f554e;
+
+function createSeededRng(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
 function makeVisualAnalysisBuffer() {
   const canvas = document.createElement('canvas');
   canvas.width = ANA_W; canvas.height = ANA_H;
@@ -34,6 +45,7 @@ let elapsed = 0;
 const scenes = {
   cars: {
     init() {
+      const rng = createSeededRng(CARS_SCENE_SEED);
       const cars = [];
       const lanes = [
         { y: SRC_H * 0.55, dir: 1,  speedMin:  90, speedMax: 220 },
@@ -44,11 +56,11 @@ const scenes = {
       for (let i = 0; i < 14; i++) {
         const lane = lanes[i % lanes.length];
         cars.push({
-          lane, x: Math.random() * SRC_W,
-          w: 70 + Math.random() * 90, h: 26 + Math.random() * 16,
-          speed: lane.speedMin + Math.random() * (lane.speedMax - lane.speedMin),
-          color: `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`,
-          window: `hsl(${Math.floor(Math.random()*360)}, 30%, 80%)`,
+          lane, x: rng() * SRC_W,
+          w: 70 + rng() * 90, h: 26 + rng() * 16,
+          speed: lane.speedMin + rng() * (lane.speedMax - lane.speedMin),
+          color: `hsl(${Math.floor(rng() * 360)}, 80%, 60%)`,
+          window: `hsl(${Math.floor(rng() * 360)}, 30%, 80%)`,
         });
       }
       sceneState = { cars, lanes };
@@ -86,13 +98,14 @@ const scenes = {
   },
   bouncers: {
     init() {
+      const rng = createSeededRng(BOUNCERS_SCENE_SEED);
       const balls = [];
       for (let i = 0; i < 10; i++) {
-        const r = 24 + Math.random() * 36;
+        const r = 24 + rng() * 36;
         balls.push({
-          x: r + Math.random()*(SRC_W - 2*r), y: r + Math.random()*(SRC_H - 2*r),
-          vx: (Math.random()-0.5)*500, vy: (Math.random()-0.5)*500, r,
-          color: `hsl(${Math.floor(Math.random()*360)}, 75%, 60%)`,
+          x: r + rng() * (SRC_W - 2 * r), y: r + rng() * (SRC_H - 2 * r),
+          vx: (rng() - 0.5) * 500, vy: (rng() - 0.5) * 500, r,
+          color: `hsl(${Math.floor(rng() * 360)}, 75%, 60%)`,
         });
       }
       sceneState = { balls };
@@ -365,4 +378,3 @@ function analyzeVisualFeedback() {
     }
   }
 }
-
