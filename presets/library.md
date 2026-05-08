@@ -24,17 +24,17 @@ Open-loop reference for the most visually active built-in scene plus the lighter
 
 ## Explorer loop family
 
-These presets use the current supported exploratory quick-start pair:
+These presets use the current exploratory quick-start pair:
 
 - `audSpreadToVisWidth`: feedback tap, depth `0.18`
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-The added spread route broadened Explorer coverage on 2026-05-08. This supported quick-start stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. Strict fresh-start reruns now close the `Cars` question negatively for this route family: widths `0.04` to `0.08` collapse feedback spread low, while width `0.12` pegs it high. See `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`.
+The added spread route broadened Explorer coverage on 2026-05-08, but fresh-start reruns later that day narrowed the currently reproducible built-in reference case to `Marquee + Pad`. `Marquee + Pulse` and `Bouncers + Pad` now run away, `Bouncers + Pulse` does not survive a repeat, `Walker` fails, and `Cars` remains outside this route family. See `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md` and `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`.
 
 ### `explorer-spread-marquee-pad`
 
-First Pad-based Explorer preset that stayed mobile under the cleared-smear protocol.
+Current reproducible built-in Explorer reference case under fresh-start reruns.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJtYXJxdWVlIn0sImF1ZGlvU291cmNlIjoicGFkIiwiY29udHJvbHMiOnsic2xpdENlbnRlciI6MC41LCJzbGl0V2lkdGgiOjAuMDQsInNjYW5TcGVlZCI6MSwiYXVkaW9HYWluIjowLjUsImF1ZGlvTWl4IjoxLCJyZXNvbHV0aW9uIjoiNjQwLDQ4MCIsImF4aXMiOiJoIn0sInJvdXRlcyI6W3siaWQiOiJhdWRBbXBUb1Zpc1NwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRDZW50cm9pZFRvVmlzUG9zIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRPbnNldFRvVmlzQ2xlYXIiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZFNwcmVhZFRvVmlzV2lkdGgiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE4fSx7ImlkIjoidmlzTW90aW9uVG9BdWRTcGVlZCIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoidmlzQnJpZ2h0VG9BdWRHYWluIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNIdWVUb0F1ZFNsaXQiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE1fV19
@@ -42,7 +42,7 @@ First Pad-based Explorer preset that stayed mobile under the cleared-smear proto
 
 ### `explorer-spread-marquee-pulse`
 
-Bright moving Explorer variant with the Pulse source.
+Historical Explorer capture. Fresh-start reruns on 2026-05-08 flipped this case to runaway, so do not treat it as a current supported reference.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJtYXJxdWVlIn0sImF1ZGlvU291cmNlIjoicHVsc2UiLCJjb250cm9scyI6eyJzbGl0Q2VudGVyIjowLjUsInNsaXRXaWR0aCI6MC4wNCwic2NhblNwZWVkIjoxLCJhdWRpb0dhaW4iOjAuNSwiYXVkaW9NaXgiOjEsInJlc29sdXRpb24iOiI2NDAsNDgwIiwiYXhpcyI6ImgifSwicm91dGVzIjpbeyJpZCI6ImF1ZEFtcFRvVmlzU3BlZWQiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZENlbnRyb2lkVG9WaXNQb3MiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZE9uc2V0VG9WaXNDbGVhciIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoiYXVkU3ByZWFkVG9WaXNXaWR0aCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTh9LHsiaWQiOiJ2aXNNb3Rpb25Ub0F1ZFNwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNCcmlnaHRUb0F1ZEdhaW4iLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6InZpc0h1ZVRvQXVkU2xpdCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTV9XX0
@@ -50,7 +50,7 @@ Bright moving Explorer variant with the Pulse source.
 
 ### `explorer-spread-bouncers-pad`
 
-Dimmer than Marquee but clearly mobile, and another Pad-based improvement over the older explorer pair.
+Historical Explorer capture. Fresh-start reruns on 2026-05-08 flipped this case to runaway, so do not treat it as a current supported reference.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJib3VuY2VycyJ9LCJhdWRpb1NvdXJjZSI6InBhZCIsImNvbnRyb2xzIjp7InNsaXRDZW50ZXIiOjAuNSwic2xpdFdpZHRoIjowLjA0LCJzY2FuU3BlZWQiOjEsImF1ZGlvR2FpbiI6MC41LCJhdWRpb01peCI6MSwicmVzb2x1dGlvbiI6IjY0MCw0ODAiLCJheGlzIjoiaCJ9LCJyb3V0ZXMiOlt7ImlkIjoiYXVkQW1wVG9WaXNTcGVlZCIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoiYXVkQ2VudHJvaWRUb1Zpc1BvcyIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoiYXVkT25zZXRUb1Zpc0NsZWFyIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRTcHJlYWRUb1Zpc1dpZHRoIiwidGFwIjoiZmVlZGJhY2siLCJkZXB0aCI6MC4xOH0seyJpZCI6InZpc01vdGlvblRvQXVkU3BlZWQiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6InZpc0JyaWdodFRvQXVkR2FpbiIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoidmlzSHVlVG9BdWRTbGl0IiwidGFwIjoiZmVlZGJhY2siLCJkZXB0aCI6MC4xNX1dfQ
@@ -58,7 +58,7 @@ Dimmer than Marquee but clearly mobile, and another Pad-based improvement over t
 
 ### `explorer-spread-bouncers-pulse`
 
-Most volatile of the currently stable spread-based presets, but still mobile under the same protocol.
+Historical Explorer capture. A first rerun stayed mobile, but a fresh-start repeat on 2026-05-08 ran away, so it is not reproducible enough to keep in the current supported set.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJib3VuY2VycyJ9LCJhdWRpb1NvdXJjZSI6InB1bHNlIiwiY29udHJvbHMiOnsic2xpdENlbnRlciI6MC41LCJzbGl0V2lkdGgiOjAuMDQsInNjYW5TcGVlZCI6MSwiYXVkaW9HYWluIjowLjUsImF1ZGlvTWl4IjoxLCJyZXNvbHV0aW9uIjoiNjQwLDQ4MCIsImF4aXMiOiJoIn0sInJvdXRlcyI6W3siaWQiOiJhdWRBbXBUb1Zpc1NwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRDZW50cm9pZFRvVmlzUG9zIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRPbnNldFRvVmlzQ2xlYXIiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZFNwcmVhZFRvVmlzV2lkdGgiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE4fSx7ImlkIjoidmlzTW90aW9uVG9BdWRTcGVlZCIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoidmlzQnJpZ2h0VG9BdWRHYWluIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNIdWVUb0F1ZFNsaXQiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE1fV19

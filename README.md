@@ -85,7 +85,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button now uses the broader-performing spread pair: audio feedback spread to visual slit width at depth `0.18`, plus visual feedback hue to audio slit position at depth `0.15`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button uses the current best spread pair: audio feedback spread to visual slit width at depth `0.18`, plus visual feedback hue to audio slit position at depth `0.15`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -180,7 +180,7 @@ This is a simple static app: one HTML entry point plus a small `js/` source fold
 slitscan-av.html
 ├── <style>          theme variables, layout, typography
 ├── markup           sidebar controls + main stage
-└── <script defer>   ordered runtime loading
+└── <script type="module"> bootstrap loader for Three.js + ordered runtime scripts
 js/
 ├── worklet-code.js  FFT slit-scan AudioWorklet source string
 ├── core.js          DOM handles, route model, helpers, safety state
@@ -232,7 +232,7 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The current spread+hue Explorer loop is still not universal. It stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`, but strict fresh-start screening shows `Cars` is outside the supported Explorer family for now: narrower widths collapse feedback spread to `0.00`, while a wider `0.12` slit pegs spread at `0.98`.
+- The current spread+hue Explorer loop is still not universal. Fresh-start reruns on 2026-05-08 narrowed the currently reproducible built-in reference case to `Marquee + Pad`. `Marquee + Pulse` and `Bouncers + Pad` ran away, `Bouncers + Pulse` failed its repeat, `Walker` failed, and `Cars` remains outside the supported Explorer family: narrower widths collapse feedback spread to `0.00`, while a wider `0.12` slit pegs spread at `0.98`.
 - Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening.
 - Replacing the Explorer loop's audio-feedback leg with amplitude-to-visual-speed also failed to broaden coverage, and the smallest hybrid test adding weak source amplitude assist to the current Explorer pair did not unlock the `Cars` or Pad-based lockups.
 - Adding the new `spread -> slit width` route materially improved the Explorer family, but `Cars` still does not yield a reproducible Explorer preset inside the current spread+hue route family. Revisit it only after adding a new feedback-capable route or different control surface.

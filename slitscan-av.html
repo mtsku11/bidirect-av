@@ -478,14 +478,32 @@ input[type=file] { display: none; }
     </aside>
   </main>
 
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
-<script defer src="js/worklet-code.js"></script>
-<script defer src="js/core.js"></script>
-<script defer src="js/visual.js"></script>
-<script defer src="js/audio.js"></script>
-<script defer src="js/modulation.js"></script>
-<script defer src="js/loop.js"></script>
-<script defer src="js/presets.js"></script>
-<script defer src="js/app.js"></script>
+<script type="module">
+  import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+  window.THREE = THREE;
+
+  const runtimeScripts = [
+    'js/worklet-code.js',
+    'js/core.js',
+    'js/visual.js',
+    'js/audio.js',
+    'js/modulation.js',
+    'js/loop.js',
+    'js/presets.js',
+    'js/app.js',
+  ];
+
+  for (const src of runtimeScripts) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = false;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.body.appendChild(script);
+    });
+  }
+</script>
 </body>
 </html>
