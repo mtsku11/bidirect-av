@@ -2,7 +2,7 @@
 
 ## 1. Project aim
 
-Build, test, document, and write up **SLITSCAN.AV** as a real-time audiovisual instrument for NIME. The instrument explores a dual slit-scan metaphor: visual slit-scan in image space and spectral slit-scan in audio space, connected by explicit cross-modal analysis routings. The core research direction is to move from a reactive audiovisual effect toward a controllable reciprocal-feedback instrument.
+Build, test, document, and write up **SLITSCAN.AV** as a real-time audiovisual instrument for NIME 2027. The instrument explores a dual slit-scan metaphor: visual slit-scan in image space and spectral slit-scan in audio space, connected by explicit cross-modal analysis routings. The core research direction is to move from a reactive audiovisual effect toward a controllable reciprocal-feedback instrument.
 
 The intended NIME contribution is not simply that audio and visuals modulate one another. The stronger contribution is:
 
@@ -108,7 +108,7 @@ Prefer:
 
 ### 5.1 Current architecture
 
-The current system should remain a single-file web instrument for as long as possible. This supports accessibility, reproducibility, and easy NIME demo distribution.
+The current system should remain a no-build static web instrument with a single HTML entry point for as long as possible. This supports accessibility, reproducibility, and easy NIME demo distribution, while allowing the source to split into local `js/` files when the monolith becomes too large to manage safely.
 
 Current components:
 
@@ -148,7 +148,7 @@ Example routing state:
   depth: 0.2,
   analysisTap: 'feedback',
   feedbackRamp: 1.0,
-  feedbackLeak: 0.98,
+  feedbackAttenuation: 0.98,
   smoothingTime: 1.5
 }
 ```
@@ -176,7 +176,7 @@ Required controls:
 - Per-routing depth cap in feedback mode, initially around 0.3.
 - Slow-ramp engagement over approximately 5 seconds when feedback is enabled.
 - Slower smoothing constants for feedback mode than source mode.
-- Feedback leak, initially 0.97 to 0.99.
+- Feedback attenuation, initially 0.97 to 0.99.
 - Panic button that immediately sets all feedback-routing depths to zero.
 - Stability indicator detecting lockup and runaway.
 - Optional freeze button that holds the current feedback state.
@@ -220,7 +220,7 @@ const runawayHoldSeconds = 1.0;
 Goals:
 
 - Create a GitHub repository.
-- Commit the current single-file version as a known baseline.
+- Commit the original single-file version as a known baseline.
 - Add README, license, and project notes.
 - Add issue labels: `audio`, `visual`, `feedback`, `ui`, `paper`, `testing`, `bug`, `nime`.
 - Add a changelog.
@@ -234,7 +234,7 @@ Deliverables:
 
 ### Phase 1 — Technical cleanup before feedback
 
-Status: in progress. The explicit routing matrix refactor is complete. Source/feedback analysis separation and the debug readout are being implemented as the next foundation step.
+Status: complete for the current build. The explicit routing matrix, source/feedback analysis separation, debug readout, and per-routing tap selectors are implemented.
 
 Goals:
 
@@ -246,7 +246,7 @@ Goals:
 
 Deliverables:
 
-- Modularized routing layer, even if still inside one HTML file.
+- Modularized routing layer without introducing a build system.
 - Visible feature meters for both source and feedback taps.
 - Reproducible test presets manually documented.
 
@@ -258,7 +258,7 @@ Acceptance criteria:
 
 ### Phase 2 — Processed-output analysis taps
 
-Status: in progress. The current build slice adds simultaneous source and processed-output values while keeping route defaults on source analysis.
+Status: complete for the current build. Source and processed-output values are available simultaneously for visual and audio features, and the UI exposes source/feedback tap selection per route.
 
 Goals:
 
@@ -285,12 +285,14 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
+Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. The current `Explorer loop` uses a newly added route: feedback audio spread to visual slit width plus feedback visual hue to audio slit position. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, `test-sessions/2026-05-07-explorer-loop-screen.md`, `test-sessions/2026-05-07-explorer-loop-post-fix.md`, `test-sessions/2026-05-07-explorer-second-leg-screen.md`, `test-sessions/2026-05-08-audio-leg-and-hybrid-screen.md`, `test-sessions/2026-05-08-spread-width-explorer-screen.md`, `test-sessions/2026-05-08-cars-geometry-explorer-screen.md`, `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`, `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`, `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md`, `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`, `test-sessions/2026-05-08-upload-challenge-suite-screen.md`, and `test-sessions/2026-05-08-upload-explorer-retune-screen.md`. The old pair remains a bounded lockup demo. After fixing both built-in source determinism and built-in visual determinism, the built-in Explorer quick-start now reproduces under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. Uploaded media now uses a weaker Explorer branch: spread depth `0.12`, slit width `0.03`, dry/wet `0.90`, with hue depth still `0.15`. Under the generated upload-suite protocol, that branch clears three of the four upload cases, but `low-sat-pan-speech.mp4 + Movie` still locks on hue. `Cars` remains outside the supported Explorer family even after the visual seed fix: a seeded rerun still flips between hue lockup and spread runaway. At this point those source-family-specific failures should be treated as findings and preset limits, not as evidence that the project must keep chasing one universal quick-start before it can move toward writing and release.
+
 Goals:
 
 - Implement the first weak bidirectional feedback pair:
   - audio feedback centroid -> visual slit position.
   - visual feedback brightness -> audio gain.
-- Add leak, smoothing, ramping, and feedback depth cap.
+- Add attenuation, smoothing, ramping, and feedback depth cap.
 - Add panic button.
 
 Deliverables:
@@ -306,6 +308,8 @@ Acceptance criteria:
 - The loop produces audible/visible behavior distinct from source-only mode.
 
 ### Phase 4 — Full per-routing feedback controls
+
+Status: substantially complete. Per-route source/feedback taps, feedback caps, ramps, attenuation, panic, and a global stability indicator are in the build. The main missing Phase 4 deliverable is a visible per-route stability surface in the routing UI.
 
 Goals:
 
@@ -333,6 +337,8 @@ Acceptance criteria:
 - The instrument remains performable under constrained settings.
 
 ### Phase 5 — Presets, logging, and reproducibility
+
+Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload. A first curated preset library now exists in `presets/library.md`, a generated upload fixture suite now exists in `fixtures/challenge-suite/`, and broader logged sessions are underway. The no-build loader now also propagates the page query string to runtime `js/*.js` URLs so cache-busted local test runs can verify script changes reliably. The main missing deliverable in this phase is now feature-trace export; that is higher value than another round of universal-quick-start tuning because it turns observations into reusable evidence.
 
 Goals:
 
@@ -365,6 +371,8 @@ Acceptance criteria:
 - Screenshots, screen recordings, and audio captures can be matched to logs.
 
 ### Phase 6 — Performance testing
+
+Status: in progress. The first uploaded video/audio session has now been run against the generated fixture suite in `fixtures/challenge-suite/` and logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`, with the retuned follow-up in `test-sessions/2026-05-08-upload-explorer-retune-screen.md`. The upload paths work, and the new upload-specific Explorer branch now clears three of the four generated upload cases, but low-saturation uploaded movie material still locks on hue.
 
 Goals:
 
@@ -433,7 +441,7 @@ NIME context:
 
 - NIME publishes peer-reviewed open-access proceedings.
 - NIME welcomes work on new interfaces for musical expression, including instrument design, performance, and artistic research.
-- NIME 2026 is scheduled for June 23-26, 2026 in London, UK.
+- Current target: NIME 2027 paper/demo submission. Track the official call dates when they are announced and keep the testing/paper schedule aligned to that cycle.
 
 Paper working title options:
 
@@ -454,6 +462,8 @@ Proposed paper structure:
 9. Discussion.
 10. Limitations and future work.
 11. Conclusion.
+
+Starter notes now live in `paper/notes.md`.
 
 ### Phase 9 — Release package
 
@@ -497,6 +507,7 @@ Test sources:
 - Procedural Walker.
 - Uploaded video with audio.
 - Uploaded audio only.
+- Generated upload fixtures in `fixtures/challenge-suite/` for repeatable non-built-in screening.
 
 Test modes:
 
@@ -537,7 +548,7 @@ Duration:
 - Feedback toggles:
 - Depth values:
 - Smoothing values:
-- Leak values:
+- Attenuation values:
 
 ## Observed behavior
 
@@ -572,6 +583,7 @@ The likely argument:
 4. The instrument uses explicit analysis-to-parameter routings so the performer can inspect, isolate, and tune the coupling paths.
 5. Reciprocal feedback introduces useful instability, but only if constrained by damping, ramping, depth caps, and emergency controls.
 6. Testing shows which routings produce playable behaviors, which tend toward lockup/runaway, and what interface affordances support performance.
+7. Those behaviors are source-family-dependent: some named presets remain mobile, while others lock or run away in ways that are themselves worth documenting.
 
 ## 9. Risks and mitigations
 
@@ -604,7 +616,7 @@ Mitigation:
 
 Mitigation:
 
-- Add ramping, leak, caps, smoothing, freeze, and panic controls early.
+- Add ramping, attenuation, caps, smoothing, freeze, and panic controls early.
 - Build from one bidirectional pair upward.
 - Save stable presets.
 
@@ -618,6 +630,10 @@ Mitigation:
 - Write reflective notes immediately after testing.
 - Compare source-only, feedback-only, and mixed modes.
 
+Current gap:
+
+- Preset/session notes exist, but downloadable feature traces are still missing.
+
 ## 10. Immediate next actions
 
 - [x] Commit the current baseline to GitHub.
@@ -625,11 +641,18 @@ Mitigation:
 - [ ] Create GitHub issues for Phases 1 to 4.
 - [x] Refactor routing state into explicit data structures.
 - [x] Add source vs feedback analysis taps.
-- [ ] Add per-routing source/feedback tap controls.
-- [ ] Implement the minimal two-routing reciprocal loop.
-- [ ] Add panic, ramp, leak, and feedback depth cap.
-- [ ] Record the first test sessions and begin the findings log.
-- [ ] Start a paper notes document with headings from the proposed NIME structure.
+- [x] Add per-routing source/feedback tap controls.
+- [x] Implement the minimal two-routing reciprocal loop.
+- [x] Add panic, ramp, attenuation, and feedback depth cap.
+- [x] Add lockup/runaway stability indicator.
+- [x] Record the first minimal-loop test session and begin the findings log.
+- [x] Add preset save/recall through URL hash and local slot names.
+- [x] Start a paper notes document with headings from the proposed NIME structure.
+- [ ] Add downloadable feature-trace export (CSV or JSON).
+- [ ] Surface per-route stability in the routing UI.
+- [ ] Add a tiny Playwright smoke test.
+- [ ] Prepare a stable live demo deployment path.
+- [ ] Choose and add a repository license.
 
 ## 11. Definition of done
 

@@ -2,7 +2,7 @@
 
 **An audio-visual instrument exploring the slit-scan effect across two domains, with cross-modulated analysis bridging them.**
 
-A single-file web app. Open in a browser. No build step, no dependencies to install, no server required.
+A no-build web app. Open `slitscan-av.html` in a browser. No dependencies to install, no bundler, no server required.
 
 ---
 
@@ -34,13 +34,17 @@ The film's natural audio-visual correlation becomes the system's input; the cros
 
 ## Running it
 
-It's one HTML file. Open it in a modern browser:
+Open `slitscan-av.html` in a modern browser:
 
 - Double-click `slitscan-av.html`, or
 - Drag it into any browser window, or
 - Serve it from any static host (GitHub Pages, Netlify, Vercel, etc.)
 
-No build step. No `npm install`. Three.js is loaded from a CDN.
+No build step. No `npm install`. Three.js is loaded from a CDN, and the local runtime lives in sibling `js/*.js` files.
+
+A small generated upload-fixture corpus now lives in `fixtures/challenge-suite/` and can be regenerated with `./scripts/generate_challenge_suite.sh`. It is useful for repeatable upload-path screening without committing large or copyrighted media.
+
+For local no-build testing, a page query string such as `slitscan-av.html?ts=dev1` now propagates to the runtime `js/*.js` URLs as well, so it also busts cached local scripts instead of only refreshing the HTML shell.
 
 The audio engine requires a user gesture before it can start (browser autoplay policy) — that's what the **Start audio** button is for.
 
@@ -60,27 +64,32 @@ These set the baseline before cross-modulation. Both domains use the same slit p
 
 ### Visual
 
-Sources: four procedural scenes (Cars, Bouncers, Marquee, Walker) or upload a video file. Render resolution scales the WebGL output independent of source resolution. Axis flips the slit between vertical and horizontal orientation.
+Sources: four procedural scenes (Cars, Bouncers, Marquee, Walker) or upload a video file. `Cars` and `Bouncers` now reset from fixed seeds so fresh-start feedback screens stay comparable. Render resolution scales the WebGL output independent of source resolution. Axis flips the slit between vertical and horizontal orientation.
 
 ### Audio
 
-Sources: built-in **Pad** synth (drone, ideal for hearing slit-scan sustain), **Pulse** synth (random short notes — good for showing the smear capture frame-by-frame), **Movie** (routes the uploaded video's own audio track through the spectral slit-scan), or **Upload audio** (any audio file).
+Sources: built-in **Pad** synth (drone, ideal for hearing slit-scan sustain, now seeded for repeatable fresh starts), **Pulse** synth (short-note probe source, also seeded), **Movie** (routes the uploaded video's own audio track through the spectral slit-scan), or **Upload audio** (any audio file).
 
 Master controls output gain. Dry/wet blends the original input signal with the slit-scanned output.
 
 ### Cross-modulation depths
 
-Each row is a routing from an analyzed feature to a target parameter. The depth slider controls how strongly that routing is active (0 = disabled). The meter beneath shows the live value of the source feature in real time.
+Each row is a routing from an analyzed feature to a target parameter. The depth slider controls how strongly that routing is active (0 = disabled). The `source / feedback` selector chooses whether that route reads pre-effect source analysis or processed-output feedback analysis. The meter beneath shows the live value currently feeding that route.
 
 **Audio drives visual:**
 - `loudness → scan speed` — amplitude (RMS) of audio adds to the visual scan speed.
 - `centroid → slit position` — spectral centroid shifts the visual slit horizontally.
 - `onsets → clear` — percussive hits in audio briefly clear the visual feedback.
+- `spread → slit width` — spectral spread widens the visual slit, admitting more fresh source when the audio spectrum broadens.
 
 **Visual drives audio:**
 - `motion → scan speed` — frame-to-frame pixel difference adds to audio scan speed.
 - `brightness → gain` — average frame luminance multiplies audio gain.
-- `hue → slit position` — dominant color hue (saturation-weighted circular mean) shifts the audio slit through the spectrum.
+- `hue → slit position` — dominant color hue (saturation-weighted circular mean) shifts the audio slit through the spectrum, with wrap-safe folding at the red seam so near-red frames stay adjacent.
+
+### Feedback safety
+
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button is a convenience spread+hue quick-start: audio feedback spread to visual slit width plus visual feedback hue to audio slit position. For seeded built-in sources it keeps the built-in start: spread depth `0.18`, hue depth `0.15`. When the current audio source is **Pulse**, the quick-start also narrows the base slit to `0.03` and lowers dry/wet to `0.85`. When the current audio source is **Movie** or **Upload audio**, the quick-start now uses a weaker upload branch: spread depth `0.12`, slit width `0.03`, dry/wet `0.90`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. With seeded built-in sources and scenes, the built-in Explorer branch reproduces cleanly on `Marquee` and `Bouncers` with both `Pad` and `Pulse`; the upload branch now clears three of the four generated upload-suite cases. The preset library is the source of truth for named starts and failure-mode examples. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -148,7 +157,7 @@ The phase strategy — using the input frame's phase with the propagated magnitu
 - *Centroid* — weighted-mean bin index, normalized 0–1.
 - *Onset* — positive-going spectral flux with fast attack and slow release, threshold-based. Crude, but the right shape for triggering events.
 
-Visual analysis now keeps separate source and feedback taps: source analysis reads the unprocessed source canvas, while feedback analysis downsamples the displayed slit-scan output. The analysis taps panel shows source and feedback values side by side. Routes still default to source analysis until per-routing source/feedback controls are enabled.
+Visual analysis now keeps separate source and feedback taps: source analysis reads the unprocessed source canvas, while feedback analysis downsamples the displayed slit-scan output. The analysis taps panel shows source and feedback values side by side. Each route can choose source or feedback independently.
 
 All analysis values are smoothed with single-pole low-pass filters. Time constants vary by feature — fast for transients (motion, amplitude, onset), slower for things that should feel stable (hue, brightness, centroid). Without smoothing the cross-modulation feels twitchy; with it, musical.
 
@@ -163,23 +172,32 @@ Modulations apply additively or multiplicatively over the base parameter values,
 
 Per-modulation depth sliders mean you can isolate any single coupling to study it, or stack them all.
 
+Feedback routing uses safety transforms before modulation: route depth is capped, route engagement ramps from 0 to the requested depth, feedback taps use slower smoothing, and feedback-routed analysis values are attenuated. These controls are intentionally part of the instrument core rather than polish.
+
 ---
 
 ## File structure
 
-This is a single self-contained HTML file. There are no external assets — Three.js loads from a CDN, and the audio worklet ships inline as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
+This is a simple static app: one HTML entry point plus a small `js/` source folder. There is still no build step — Three.js loads from a CDN, and the audio worklet still ships as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
 
 ```
-slitscan-av.html    ~1600 lines
+slitscan-av.html
 ├── <style>          theme variables, layout, typography
 ├── markup           sidebar controls + main stage
-└── <script>         module
-    ├── workletCode  string — FFT, slit-scan, OLA reconstruction
-    ├── visual       procedural scenes, Three.js setup, shader
-    ├── audio        AudioContext, source nodes, worklet wiring
-    ├── analysis     visual + audio feature extraction
-    ├── modulation   cross-routing matrix
-    └── loop         render + analysis tick at requestAnimationFrame rate
+└── <script type="module"> bootstrap loader for Three.js + ordered runtime scripts
+js/
+├── worklet-code.js  FFT slit-scan AudioWorklet source string
+├── core.js          DOM handles, route model, helpers, safety state
+├── visual.js        scenes, Three.js setup, visual analysis
+├── audio.js         AudioContext, sources, worklet wiring, audio analysis
+├── modulation.js    cross-domain parameter mapping, meters, spectrogram
+├── loop.js          requestAnimationFrame render/update loop
+├── presets.js       video upload, status, presets, resolution/axis helpers
+└── app.js           boot, labels, UI bindings, quick-start actions
+fixtures/
+└── challenge-suite/ generated upload test media + README
+scripts/
+└── generate_challenge_suite.sh  regenerate the upload fixture suite
 ```
 
 ---
@@ -194,61 +212,89 @@ The artifact iframe sandbox in some embedded contexts blocks `getUserMedia()` �
 
 ---
 
-## Known limitations
+## Presets
 
-- Phone CPUs may chug at 1280×720 with audio enabled. Drop visual resolution to 640×480 if FPS drops.
-- iPhone HEVC video files often fail to decode in browser. Re-encode or change capture format.
-- The Pulse source has no fixed seed, so identical settings won't reproduce identical sound across sessions.
-- Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
-- No preset save/recall yet. All settings reset on page reload.
+The sidebar now includes a small preset panel:
+
+- `Copy link` writes the current state into the URL hash and attempts to copy the shareable link.
+- `Save slot` / `Load slot` store and restore named presets through `localStorage`.
+- `Load hash` reapplies the current URL hash without relying on browser history state.
+- Curated reference hashes now live in `presets/library.md`.
+
+Treat `presets/library.md` as the reproducible research-facing entry point. The sidebar `Explorer loop` button is a convenience start, not a claim that one feedback pair should fit every source family.
+
+Preset capture currently includes:
+
+- Built-in visual source selection.
+- Built-in audio source selection.
+- Base slit, gain, mix, axis, and resolution controls.
+- Per-route tap selection and route depth.
+
+Uploaded movie and audio files are not serialized, so shared hashes remain structural rather than asset-complete.
 
 ---
 
-## Planned: reciprocal feedback layer
+## Known limitations and current findings
 
-The cross-modulation built into the current version is *reactive* — each modulation is a function of the source signal. The next architectural step is to make the system *self-referential*: each domain analyzes its own processed output and modulates the other accordingly. The system gains internal state that evolves on its own, and starts behaving less like an effect chain and more like an instrument with its own inner life.
+- Phone CPUs may chug at 1280×720 with audio enabled. Drop visual resolution to 640×480 if FPS drops.
+- iPhone HEVC video files often fail to decode in browser. Re-encode or change capture format.
+- Built-in synth sources and the stochastic `Cars` and `Bouncers` scenes now reset from fixed seeds, which makes fresh-start regression screens much more meaningful, but uploaded media still varies with the asset itself.
+- Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
+- Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
+- The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
+- The current spread+hue Explorer loop is not universal. After making the built-in synth sources and stochastic built-in scenes deterministic, it reproduces cleanly under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Walker` remains outside the regression set, and `Cars` remains outside the supported Explorer family: a seeded rerun still flips between hue lockup and spread runaway. These are current source-family findings, not proof that the instrument is unfinished.
+- The generated upload challenge suite still exposes a remaining gap. After adopting a weaker upload-specific Explorer branch, `life-color-pulse.mp4 + Movie`, `Marquee + speech-count.wav`, and `Bouncers + noise-pulse.wav` are stable under the generated test protocol, but `low-sat-pan-speech.mp4 + Movie` still locks on hue. That low-saturation movie failure is currently being treated as a documented finding and a targeted follow-up, not a reason to keep chasing one universal quick-start.
+- Earlier motion, brightness, amplitude, and weak-hybrid Explorer alternatives were screened before the visual-determinism fix and none is currently promoted over the spread+hue quick-start. If the present built-in coverage regresses later, those alternatives should be re-screened from the seeded baseline rather than assumed settled.
+- Adding the new `spread -> slit width` route materially improved the Explorer family, but `Cars` still does not yield a reproducible Explorer preset inside the current spread+hue route family. Revisit it only after adding a new feedback-capable route or different control surface.
+- The highest-value project gaps are now evidence and packaging rather than another round of default-preset tuning: downloadable feature-trace export, per-route stability surfacing, smoke tests, paper notes, a live demo path, and a repository license.
 
-This section captures the design thinking before the implementation — the architectural delta, the failure modes, the damping strategy, and the minimal starting configuration.
+---
+
+## Reciprocal feedback design notes
+
+The reciprocal feedback layer is already in the build in both minimal-loop and per-route forms. The notes below preserve the rationale behind the architecture, the failure modes it is meant to expose, and the remaining extensions that matter for research documentation.
+
+The instrument can now switch each route between source and processed-output analysis. The more important open work is no longer “can feedback exist?” but “how do we log, name, perform, and write about the behaviors it produces?”
 
 ### The shift
 
-Currently:
+In source-driven mode:
 
 - Visual analysis taps `sourceCanvas` (the unprocessed source).
 - Audio analysis taps an `AnalyserNode` placed *before* the worklet.
 
-In feedback mode:
+In reciprocal-feedback mode:
 
 - Visual analysis taps the slit-scan's *output* — either via `gl.readPixels` on the displayed framebuffer, or by rendering the current ping-pong target into a small offscreen 2D canvas (cheaper).
 - Audio analysis taps an `AnalyserNode` placed *after* the worklet.
 
 The cross-routing matrix stays the same — the same six modulations — but the values flowing through it are now post-effect, not pre-effect. The slit-scan's output becomes its own input, via the other domain.
 
-A `source / feedback` toggle should be available *per routing*, not as a global switch. Some routings might stay on source while others go to feedback, which gives the most expressive control surface and lets you mix open-loop reactivity with closed-loop autonomy.
+A `source / feedback` toggle is available *per routing*, not as a global switch. Some routings can stay on source while others go to feedback, which lets the instrument mix open-loop reactivity with closed-loop autonomy.
 
 ### Why damping is load-bearing
 
 Closed loops with effective gain greater than one diverge. Closed loops with effective gain less than one converge to silence. The interesting behavior lives in the narrow band between, where the loop sustains without locking up or running away — and damping mechanisms are what hold the system in that band.
 
-Three damping mechanisms to implement together:
+Three damping mechanisms now hold the feedback layer together:
 
 - **Slow follows.** The smoothing low-pass filters on analyzed values should be markedly slower in feedback mode than in source mode. If the loop responds in milliseconds, it locks instantly. If it responds over seconds, the system has time to evolve before the loop closes.
 - **Depth limits.** Modulation depths must be capped lower in feedback mode. A depth of 0.5 that feels gentle on source signals can be wildly unstable on feedback signals because the loop multiplies through itself each cycle. A reasonable starting cap is 0.3.
-- **Leak.** Each feedback path should be slightly attenuated per cycle (e.g., the analyzed value is multiplied by 0.97–0.99 before being applied). This is the equivalent of a resistor in a positive feedback circuit — it ensures the system can't sustain forever without fresh input from the source.
+- **Attenuation.** Each feedback path is slightly reduced before modulation. This is a practical damping control, not a true time-based decay.
 
 ### Failure modes
 
 **Lockup.** The system finds a stable attractor and sits in it. All meters flatten to constant values. The output becomes static — the visual stops evolving, the audio holds a fixed drone. Recognized by: meters reading the same value for more than ~1 second with no modulation activity. Cause: damping too high, depths too low, or the system has found a self-consistent state from which it can't escape on its own.
 
-**Runaway.** Positive feedback amplifies through the loop. Analyzed values clip to extremes. The visual goes to pure white or pure black; the audio clips or drops to silence. Recognized by: meters pegged at 0 or 1 for sustained periods, harsh output. Cause: damping too low, depths too high, leak too small.
+**Runaway.** Positive feedback amplifies through the loop. Analyzed values clip to extremes. The visual goes to pure white or pure black; the audio clips or drops to silence. Recognized by: meters pegged at 0 or 1 for sustained periods, harsh output. Cause: damping too low, depths too high, attenuation too weak.
 
 **Sweet spot.** Perpetual evolution without convergence — meters in motion, output continuously shifting but never extreme. This is the goal. The system surprises you without becoming useless.
 
-A small stability indicator in the UI (a light that goes amber when meters flatten or peg) makes it easy to feel where the system is sitting in real time.
+A small stability indicator in the UI watches the active feedback routes over a rolling 2-second window. It reports stable, lockup, or runaway when meters flatten or peg.
 
 ### Minimal first loop
 
-Don't enable all six modulations in feedback mode at once. The first build should engage one weakly-coupled bidirectional pair:
+The first reciprocal build intentionally avoided all six modulations at once and instead engaged one weakly-coupled bidirectional pair:
 
 - Audio output centroid → visual slit position (depth ≈ 0.2)
 - Visual output brightness → audio gain (depth ≈ 0.2)
@@ -259,7 +305,7 @@ This is the smallest closed loop: each domain affects the other through exactly 
 
 - A `source / feedback` toggle per routing (six toggles total) rather than a single global switch.
 - A slow-ramp engage control — when feedback is enabled on any routing, that routing's depth scales up over ~5 seconds, giving the operator time to pull back if the system heads in a bad direction.
-- A stability indicator (per-routing or global) that flags lockup or runaway in real time.
+- A global stability indicator that flags lockup or runaway in real time.
 - A panic button that instantly zeroes all feedback depths.
 - Optionally: a "freeze" toggle that holds the current feedback state, letting you walk away from a good moment without it drifting.
 
@@ -289,8 +335,6 @@ Roads we discussed but haven't taken (the reciprocal feedback layer is the major
 **Channel-split slit.** Apply the slit-scan separately to R, G, B (or stereo L, R) with different positions per channel. Produces chromatic-aberration-style temporal displacement.
 
 **Optical flow.** Replace the frame-difference motion estimator with a real Lucas-Kanade or Farnebäck optical flow. Gives directional motion vectors, which open up motion-direction-driven modulations (horizontal motion biases one parameter, vertical motion biases another).
-
-**Preset save / recall.** Serialize the current control values to URL hash or `localStorage` for sharing settings between sessions and with others.
 
 **Live webcam mode.** The original goal of the project. Trivially supported by the architecture — replace `CanvasTexture(sourceCanvas)` with `VideoTexture(getUserMediaStream)`. Requires running outside a sandboxed iframe.
 
