@@ -32,6 +32,8 @@ These presets use the current exploratory quick-start pair:
 
 After fixing both built-in source determinism and stochastic built-in scene determinism, the current Explorer quick-start now reproduces across the core `Marquee` and `Bouncers` built-in cases with both `Pad` and `Pulse`. `Cars` and `Walker` remain outside the supported set. See `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md` and `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`.
 
+The first generated upload challenge-suite screen is logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`. That screen did not clear the same threshold: the current Explorer structure only held on `Marquee + speech-count.wav`, while the uploaded movie and broadband uploaded-audio cases failed by hue lockup or spread runaway.
+
 ### `explorer-spread-marquee-pad`
 
 Current supported Explorer reference on the seeded `Marquee + Pad` case.
@@ -79,6 +81,19 @@ Current supported Explorer reference on the seeded `Bouncers + Pulse` case.
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJib3VuY2VycyJ9LCJhdWRpb1NvdXJjZSI6InB1bHNlIiwiY29udHJvbHMiOnsic2xpdENlbnRlciI6MC41LCJzbGl0V2lkdGgiOjAuMDMsInNjYW5TcGVlZCI6MSwiYXVkaW9HYWluIjowLjUsImF1ZGlvTWl4IjowLjg1LCJyZXNvbHV0aW9uIjoiNjQwLDQ4MCIsImF4aXMiOiJoIn0sInJvdXRlcyI6W3siaWQiOiJhdWRBbXBUb1Zpc1NwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRDZW50cm9pZFRvVmlzUG9zIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRPbnNldFRvVmlzQ2xlYXIiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZFNwcmVhZFRvVmlzV2lkdGgiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE4fSx7ImlkIjoidmlzTW90aW9uVG9BdWRTcGVlZCIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoidmlzQnJpZ2h0VG9BdWRHYWluIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNIdWVUb0F1ZFNsaXQiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE1fV19
 ```
+
+## Uploaded-media reference cases
+
+These are not hashable end-to-end because uploaded assets are not serialized into presets. Recreate them by loading the current `Explorer loop` structure and then manually uploading the named file from `fixtures/challenge-suite/`.
+
+- `low-sat-pan-speech.mp4 + Movie`
+  - `lockup · flat 0.15 on hue to slitPosition`
+- `life-color-pulse.mp4 + Movie`
+  - `runaway · pegged 0.98 on spread to slitWidth`
+- `Marquee + speech-count.wav`
+  - `stable · window 2.0s · range 0.11`
+- `Bouncers + noise-pulse.wav`
+  - `runaway · pegged 0.98 on spread to slitWidth`
 
 ## Minimal-loop lockup family
 

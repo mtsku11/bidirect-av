@@ -30,8 +30,11 @@ Read these files in this order:
 3. `README.md` for the current user-facing description, controls, architecture, and known limitations.
 4. `plan.md` for the research direction, development phases, acceptance criteria, and testing protocol.
 5. `TODO.md` for current build status, immediate implementation tasks, and known follow-ups.
-6. `suggested-reading.md` for academic framing and literature-reading priorities.
-7. `slitscan-av.html` for implementation reality before changing code.
+6. `presets/library.md` for the current curated structural starting points.
+7. `fixtures/challenge-suite/README.md` when uploaded-media screening or file-upload behavior is relevant.
+8. The most relevant file in `test-sessions/` for the current investigation thread.
+9. `suggested-reading.md` for academic framing and literature-reading priorities.
+10. `slitscan-av.html` and the relevant `js/*.js` files for implementation reality before changing code.
 
 If a conversation decision must survive compaction, record it in the appropriate Markdown file before relying on it. If the Markdown files and implementation disagree, inspect the implementation, preserve user work, and update the relevant documentation as part of the change.
 
@@ -130,6 +133,8 @@ The agent may modify:
 - `README.md`
 - `plan.md`
 - `agent.md`
+- `fixtures/`
+- `scripts/`
 - test files
 - preset files
 - paper notes
@@ -141,6 +146,8 @@ The agent may add:
 
 - `tests/` directory
 - `presets/` directory
+- `fixtures/` directory
+- `scripts/` directory
 - `docs/` directory
 - `paper/` directory
 - `.github/` issue templates or workflows

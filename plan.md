@@ -285,7 +285,7 @@ Acceptance criteria:
 
 ### Phase 3 — Minimal reciprocal feedback loop
 
-Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. The current `Explorer loop` uses a newly added route: feedback audio spread to visual slit width at depth `0.18`, plus feedback visual hue to audio slit position at depth `0.15`. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, `test-sessions/2026-05-07-explorer-loop-screen.md`, `test-sessions/2026-05-07-explorer-loop-post-fix.md`, `test-sessions/2026-05-07-explorer-second-leg-screen.md`, `test-sessions/2026-05-08-audio-leg-and-hybrid-screen.md`, `test-sessions/2026-05-08-spread-width-explorer-screen.md`, `test-sessions/2026-05-08-cars-geometry-explorer-screen.md`, `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`, `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`, `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md`, and `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`. The old pair remains a bounded lockup demo. After fixing both built-in source determinism and built-in visual determinism, the Explorer quick-start now reproduces under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Cars` remains outside the supported Explorer family even after the visual seed fix: a seeded rerun still flips between hue lockup and spread runaway.
+Status: in progress. The original quick-start pair now lives as `Lockup loop`: feedback centroid to visual position plus feedback brightness to audio gain at depth `0.20`. The current `Explorer loop` uses a newly added route: feedback audio spread to visual slit width at depth `0.18`, plus feedback visual hue to audio slit position at depth `0.15`. Testing is logged in `test-sessions/2026-05-07-minimal-loop.md`, `test-sessions/2026-05-07-comparative-minimal-loop.md`, `test-sessions/2026-05-07-explorer-loop-screen.md`, `test-sessions/2026-05-07-explorer-loop-post-fix.md`, `test-sessions/2026-05-07-explorer-second-leg-screen.md`, `test-sessions/2026-05-08-audio-leg-and-hybrid-screen.md`, `test-sessions/2026-05-08-spread-width-explorer-screen.md`, `test-sessions/2026-05-08-cars-geometry-explorer-screen.md`, `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`, `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`, `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md`, `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`, and `test-sessions/2026-05-08-upload-challenge-suite-screen.md`. The old pair remains a bounded lockup demo. After fixing both built-in source determinism and built-in visual determinism, the Explorer quick-start now reproduces under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. That built-in win does not yet carry over to uploaded media: the first generated upload suite only held on `Marquee + speech-count.wav`, while a low-saturation speech movie locked on hue and denser uploaded audio cases ran away on the spread leg. `Cars` remains outside the supported Explorer family even after the visual seed fix: a seeded rerun still flips between hue lockup and spread runaway.
 
 Goals:
 
@@ -336,7 +336,7 @@ Acceptance criteria:
 
 ### Phase 5 — Presets, logging, and reproducibility
 
-Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload. A first curated preset library now exists in `presets/library.md`, and broader logged sessions are underway.
+Status: in progress. URL-hash and local-slot preset round-tripping is now working for built-in scenes, built-in audio sources, base controls, routing taps, and routing depths. Uploaded media still needs manual re-selection after reload. A first curated preset library now exists in `presets/library.md`, a generated upload fixture suite now exists in `fixtures/challenge-suite/`, and broader logged sessions are underway.
 
 Goals:
 
@@ -369,6 +369,8 @@ Acceptance criteria:
 - Screenshots, screen recordings, and audio captures can be matched to logs.
 
 ### Phase 6 — Performance testing
+
+Status: in progress. The first uploaded video/audio session has now been run against the generated fixture suite in `fixtures/challenge-suite/` and logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`. The upload paths work, but the current Explorer quick-start is not yet robust across that suite.
 
 Goals:
 
@@ -501,6 +503,7 @@ Test sources:
 - Procedural Walker.
 - Uploaded video with audio.
 - Uploaded audio only.
+- Generated upload fixtures in `fixtures/challenge-suite/` for repeatable non-built-in screening.
 
 Test modes:
 

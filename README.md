@@ -42,6 +42,8 @@ Open `slitscan-av.html` in a modern browser:
 
 No build step. No `npm install`. Three.js is loaded from a CDN, and the local runtime lives in sibling `js/*.js` files.
 
+A small generated upload-fixture corpus now lives in `fixtures/challenge-suite/` and can be regenerated with `./scripts/generate_challenge_suite.sh`. It is useful for repeatable upload-path screening without committing large or copyrighted media.
+
 The audio engine requires a user gesture before it can start (browser autoplay policy) — that's what the **Start audio** button is for.
 
 ---
@@ -190,6 +192,10 @@ js/
 ├── loop.js          requestAnimationFrame render/update loop
 ├── presets.js       video upload, status, presets, resolution/axis helpers
 └── app.js           boot, labels, UI bindings, quick-start actions
+fixtures/
+└── challenge-suite/ generated upload test media + README
+scripts/
+└── generate_challenge_suite.sh  regenerate the upload fixture suite
 ```
 
 ---
@@ -233,6 +239,7 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
 - The current spread+hue Explorer loop is still not universal. After making the built-in synth sources and stochastic built-in scenes deterministic, it now reproduces cleanly under fresh starts on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Walker` remains outside the regression set, and `Cars` remains outside the supported Explorer family: a seeded rerun still flips between hue lockup and spread runaway.
+- The first generated upload challenge-suite screen did not clear the same threshold. `Marquee + speech-count.wav` stayed stable, `low-sat-pan-speech.mp4 + Movie` locked on hue, and both `life-color-pulse.mp4 + Movie` and `Bouncers + noise-pulse.wav` ran away on the spread leg. The next likely fix is a lower-spread or otherwise upload-specific Explorer start rather than assuming the built-in quick-start generalizes.
 - Earlier motion, brightness, amplitude, and weak-hybrid Explorer alternatives were screened before the visual-determinism fix and none is currently promoted over the spread+hue quick-start. If the present built-in coverage regresses later, those alternatives should be re-screened from the seeded baseline rather than assumed settled.
 - Adding the new `spread -> slit width` route materially improved the Explorer family, but `Cars` still does not yield a reproducible Explorer preset inside the current spread+hue route family. Revisit it only after adding a new feedback-capable route or different control surface.
 
