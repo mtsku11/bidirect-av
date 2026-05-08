@@ -493,11 +493,12 @@ input[type=file] { display: none; }
     'js/presets.js',
     'js/app.js',
   ];
+  const runtimeQuery = window.location.search || '';
 
   for (const src of runtimeScripts) {
     await new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = src;
+      script.src = runtimeQuery ? `${src}${runtimeQuery}` : src;
       script.async = false;
       script.onload = resolve;
       script.onerror = () => reject(new Error(`Failed to load ${src}`));

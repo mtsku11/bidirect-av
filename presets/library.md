@@ -32,7 +32,7 @@ These presets use the current exploratory quick-start pair:
 
 After fixing both built-in source determinism and stochastic built-in scene determinism, the current Explorer quick-start now reproduces across the core `Marquee` and `Bouncers` built-in cases with both `Pad` and `Pulse`. `Cars` and `Walker` remain outside the supported set. See `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md` and `test-sessions/2026-05-08-visual-determinism-and-explorer-revalidation.md`.
 
-The first generated upload challenge-suite screen is logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`. That screen did not clear the same threshold: the current Explorer structure only held on `Marquee + speech-count.wav`, while the uploaded movie and broadband uploaded-audio cases failed by hue lockup or spread runaway.
+The first generated upload challenge-suite screen is logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`, and the retuned upload-specific Explorer branch is logged in `test-sessions/2026-05-08-upload-explorer-retune-screen.md`. The current upload branch uses spread depth `0.12`, slit width `0.03`, and dry/wet `0.90` for `Movie` and `Upload audio`.
 
 ### `explorer-spread-marquee-pad`
 
@@ -87,13 +87,13 @@ Current supported Explorer reference on the seeded `Bouncers + Pulse` case.
 These are not hashable end-to-end because uploaded assets are not serialized into presets. Recreate them by loading the current `Explorer loop` structure and then manually uploading the named file from `fixtures/challenge-suite/`.
 
 - `low-sat-pan-speech.mp4 + Movie`
-  - `lockup · flat 0.15 on hue to slitPosition`
+  - `lockup · flat 0.14 on hue to slitPosition`
 - `life-color-pulse.mp4 + Movie`
-  - `runaway · pegged 0.98 on spread to slitWidth`
+  - `stable · window 2.0s · range 0.30`
 - `Marquee + speech-count.wav`
   - `stable · window 2.0s · range 0.11`
 - `Bouncers + noise-pulse.wav`
-  - `runaway · pegged 0.98 on spread to slitWidth`
+  - `stable · window 2.0s · range 0.12`
 
 ## Minimal-loop lockup family
 

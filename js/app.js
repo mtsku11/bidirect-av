@@ -103,17 +103,27 @@ function engageMinimalLoop() {
 }
 
 function engageExplorerLoop() {
+  const isPulseSource = currentSourceType === 'pulse';
+  const isUploadedSource = currentSourceType === 'video' || currentSourceType === 'file';
+
   // Audio spread widens the visual slit when the post-worklet spectrum broadens,
   // which proved more mobile than the old centroid-position explorer pair.
+  // Uploaded movie/file audio needs a weaker spread leg and a slightly tighter
+  // base start than the seeded built-in cases, otherwise dense broadband media
+  // tends to push the slit width route too hard.
   configureFeedbackQuickstart([
-    { id: 'audSpreadToVisWidth', depth: 0.18 },
+    { id: 'audSpreadToVisWidth', depth: isUploadedSource ? 0.12 : 0.18 },
     { id: 'visHueToAudSlit', depth: 0.15 },
   ]);
   // Pulse needs a slightly narrower, less-wet starting point if the spread leg
-  // is going to stay exploratory instead of pegging immediately.
-  if (currentSourceType === 'pulse') {
+  // is going to stay exploratory instead of pegging immediately. Uploaded file
+  // and movie audio also behave better with a tighter, slightly drier start.
+  if (isPulseSource) {
     slitWidth.value = '0.03';
     audioMix.value = '0.85';
+  } else if (isUploadedSource) {
+    slitWidth.value = '0.03';
+    audioMix.value = '0.90';
   } else {
     slitWidth.value = '0.04';
     audioMix.value = '1';

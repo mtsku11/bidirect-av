@@ -35,7 +35,8 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Make stochastic built-in visual scenes deterministic for fresh-start feedback screening. `Cars` and `Bouncers` now reset from fixed seeds.
 - [x] Re-tune or replace the current Explorer quick-start. After seeding the built-in visual scenes, the current spread+hue Explorer loop now reproduces on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Cars` and `Walker` remain outside the supported set.
 - [x] Add a small external challenge suite of uploaded video and audio clips. A generated suite now lives in `fixtures/challenge-suite/`, and the first upload-based screen is logged in `test-sessions/2026-05-08-upload-challenge-suite-screen.md`.
-- [ ] Screen a lower-spread or otherwise upload-friendly Explorer start against the external challenge suite. The current spread+hue Explorer loop only held on `Marquee + speech-count.wav`; `low-sat-pan-speech.mp4 + Movie` locked on hue, while `life-color-pulse.mp4 + Movie` and `Bouncers + noise-pulse.wav` ran away on the spread leg.
+- [x] Screen a lower-spread or otherwise upload-friendly Explorer start against the external challenge suite. The app now uses an upload-specific Explorer branch for `Movie` and `Upload audio`: spread depth `0.12`, slit width `0.03`, dry/wet `0.90`. That branch clears three of the four generated upload cases; see `test-sessions/2026-05-08-upload-explorer-retune-screen.md`.
+- [ ] Screen a lower-hue or alternate uploaded-movie second leg for low-saturation footage. `low-sat-pan-speech.mp4 + Movie` still locks on hue even after the weaker upload-specific spread branch.
 - [ ] Revisit `Cars` only after adding a new feedback-capable route or different control surface; width-only tuning inside the current spread+hue family flips between low-spread and high-spread runaway.
 - [ ] Choose and add a repository license before publication/archive.
 
