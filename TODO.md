@@ -4,7 +4,8 @@ This file tracks current build status so compacted sessions can resume from repo
 
 ## Current Build State
 
-- [x] Baseline single-file app committed and pushed to `main`.
+- [x] Baseline no-build app committed and pushed to `main`.
+- [x] Runtime source split out of the HTML monolith into ordered local `js/*.js` files without adding a build system.
 - [x] Explicit route definitions added for the six current cross-modulation paths.
 - [x] Source and processed-output analysis taps added in `feature/feedback-analysis-taps`.
 - [x] Analysis taps debug panel added for source vs feedback values.

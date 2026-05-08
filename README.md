@@ -2,7 +2,7 @@
 
 **An audio-visual instrument exploring the slit-scan effect across two domains, with cross-modulated analysis bridging them.**
 
-A single-file web app. Open in a browser. No build step, no dependencies to install, no server required.
+A no-build web app. Open `slitscan-av.html` in a browser. No dependencies to install, no bundler, no server required.
 
 ---
 
@@ -34,13 +34,13 @@ The film's natural audio-visual correlation becomes the system's input; the cros
 
 ## Running it
 
-It's one HTML file. Open it in a modern browser:
+Open `slitscan-av.html` in a modern browser:
 
 - Double-click `slitscan-av.html`, or
 - Drag it into any browser window, or
 - Serve it from any static host (GitHub Pages, Netlify, Vercel, etc.)
 
-No build step. No `npm install`. Three.js is loaded from a CDN.
+No build step. No `npm install`. Three.js is loaded from a CDN, and the local runtime lives in sibling `js/*.js` files.
 
 The audio engine requires a user gesture before it can start (browser autoplay policy) — that's what the **Start audio** button is for.
 
@@ -174,19 +174,22 @@ Feedback routing uses safety transforms before modulation: route depth is capped
 
 ## File structure
 
-This is a single self-contained HTML file. There are no external assets — Three.js loads from a CDN, and the audio worklet ships inline as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
+This is a simple static app: one HTML entry point plus a small `js/` source folder. There is still no build step — Three.js loads from a CDN, and the audio worklet still ships as a string and is instantiated via `URL.createObjectURL(new Blob([workletCode]))`.
 
 ```
-slitscan-av.html    ~2200 lines
+slitscan-av.html
 ├── <style>          theme variables, layout, typography
 ├── markup           sidebar controls + main stage
-└── <script>         module
-    ├── workletCode  string — FFT, slit-scan, OLA reconstruction
-    ├── visual       procedural scenes, Three.js setup, shader
-    ├── audio        AudioContext, source nodes, worklet wiring
-    ├── analysis     visual + audio feature extraction
-    ├── modulation   cross-routing matrix
-    └── loop         render + analysis tick at requestAnimationFrame rate
+└── <script defer>   ordered runtime loading
+js/
+├── worklet-code.js  FFT slit-scan AudioWorklet source string
+├── core.js          DOM handles, route model, helpers, safety state
+├── visual.js        scenes, Three.js setup, visual analysis
+├── audio.js         AudioContext, sources, worklet wiring, audio analysis
+├── modulation.js    cross-domain parameter mapping, meters, spectrogram
+├── loop.js          requestAnimationFrame render/update loop
+├── presets.js       video upload, status, presets, resolution/axis helpers
+└── app.js           boot, labels, UI bindings, quick-start actions
 ```
 
 ---

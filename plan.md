@@ -108,7 +108,7 @@ Prefer:
 
 ### 5.1 Current architecture
 
-The current system should remain a single-file web instrument for as long as possible. This supports accessibility, reproducibility, and easy NIME demo distribution.
+The current system should remain a no-build static web instrument with a single HTML entry point for as long as possible. This supports accessibility, reproducibility, and easy NIME demo distribution, while allowing the source to split into local `js/` files when the monolith becomes too large to manage safely.
 
 Current components:
 
@@ -220,7 +220,7 @@ const runawayHoldSeconds = 1.0;
 Goals:
 
 - Create a GitHub repository.
-- Commit the current single-file version as a known baseline.
+- Commit the original single-file version as a known baseline.
 - Add README, license, and project notes.
 - Add issue labels: `audio`, `visual`, `feedback`, `ui`, `paper`, `testing`, `bug`, `nime`.
 - Add a changelog.
@@ -246,7 +246,7 @@ Goals:
 
 Deliverables:
 
-- Modularized routing layer, even if still inside one HTML file.
+- Modularized routing layer without introducing a build system.
 - Visible feature meters for both source and feedback taps.
 - Reproducible test presets manually documented.
 

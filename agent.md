@@ -146,7 +146,7 @@ The agent may add:
 - `.github/` issue templates or workflows
 - lightweight test fixtures
 
-The agent should preserve the single-file no-build-step nature of the main instrument unless the project owner explicitly decides to move to a build system.
+The agent should preserve the no-build-step nature of the main instrument unless the project owner explicitly decides to move to a build system. A single HTML entry point with local ordered `js/` files is acceptable; adding a bundler or framework is not the default.
 
 ## 6. Technical priorities
 
