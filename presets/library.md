@@ -24,13 +24,13 @@ Open-loop reference for the most visually active built-in scene plus the lighter
 
 ## Explorer loop family
 
-These presets use the current exploratory quick-start pair:
+These presets use the current supported exploratory quick-start pair:
 
 - `audSpreadToVisWidth`: feedback tap, depth `0.18`
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-The added spread route broadened Explorer coverage on 2026-05-08. This quick-start now stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Cars + Pad` and `Cars + Pulse` still converge to lockup.
+The added spread route broadened Explorer coverage on 2026-05-08. This supported quick-start stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Cars + Pad` and `Cars + Pulse` are still unresolved under the supported quick-start. A geometry-aware Cars candidate exists in `test-sessions/2026-05-08-cars-geometry-explorer-screen.md`, but it is not yet reproducible enough to promote into this library.
 
 ### `explorer-spread-marquee-pad`
 

@@ -28,7 +28,9 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Screen a new explorer pair that changes the audio-feedback leg as well; keeping `audCentroidToVisPos` fixed did not solve the lockup problem.
 - [x] Consider one weak source-driven assist if the next pure two-leg reciprocal pairs remain too collapse-prone.
 - [x] Add one new feedback-capable route or derived analysis feature for Explorer screening; the new `audSpreadToVisWidth` route broadened Explorer coverage.
-- [ ] Decide whether to tune the spread+hue Explorer loop for `Cars` or treat `Cars` as a separate alternate exploratory preset.
+- [ ] Repeat Cars geometry tuning under a fresh-start reproducibility criterion, or treat `Cars` as a separate alternate exploratory preset.
+- [ ] Screen `Walker` against the current supported Explorer quick-start and decide whether it joins the core built-in regression set.
+- [ ] Add a small external challenge suite of uploaded video and audio clips and screen the supported Explorer quick-start beyond the built-in regression set.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks

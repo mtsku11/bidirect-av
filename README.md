@@ -229,10 +229,10 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The current spread+hue Explorer loop is still not universal. It broadened coverage to `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`, but `Cars + Pad` and `Cars + Pulse` still converge to lockup.
+- The current spread+hue Explorer loop is still not universal. It broadened coverage to `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`, but `Cars + Pad` and `Cars + Pulse` still converge to lockup under the supported quick-start.
 - Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening.
 - Replacing the Explorer loop's audio-feedback leg with amplitude-to-visual-speed also failed to broaden coverage, and the smallest hybrid test adding weak source amplitude assist to the current Explorer pair did not unlock the `Cars` or Pad-based lockups.
-- Adding the new `spread -> slit width` route materially improved the Explorer family, but the remaining `Cars` lockup means the quick-start is still scene-dependent.
+- Adding the new `spread -> slit width` route materially improved the Explorer family, but the fresh-start Cars geometry rerun did not reproduce well enough to promote a geometry-aware universal quick-start.
 
 ---
 
