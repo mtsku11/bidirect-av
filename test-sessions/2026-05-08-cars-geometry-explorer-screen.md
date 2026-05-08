@@ -97,3 +97,5 @@ The next worthwhile test is still `Cars` tuning, but with a stricter criterion:
 
 - repeat the `Cars` geometry screens from clean starts
 - if one configuration keeps winning, promote it as a `Cars`-specific alternate exploratory preset
+
+This note is now followed by `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`, which closes the current `Cars` question negatively for the spread+hue route family.

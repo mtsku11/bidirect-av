@@ -30,7 +30,7 @@ These presets use the current supported exploratory quick-start pair:
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-The added spread route broadened Explorer coverage on 2026-05-08. This supported quick-start stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. `Cars + Pad` and `Cars + Pulse` are still unresolved under the supported quick-start. A geometry-aware Cars candidate exists in `test-sessions/2026-05-08-cars-geometry-explorer-screen.md`, but it is not yet reproducible enough to promote into this library.
+The added spread route broadened Explorer coverage on 2026-05-08. This supported quick-start stays mobile on `Marquee + Pad`, `Marquee + Pulse`, `Bouncers + Pad`, and `Bouncers + Pulse`. Strict fresh-start reruns now close the `Cars` question negatively for this route family: widths `0.04` to `0.08` collapse feedback spread low, while width `0.12` pegs it high. See `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`.
 
 ### `explorer-spread-marquee-pad`
 
