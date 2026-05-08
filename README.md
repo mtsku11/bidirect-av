@@ -229,7 +229,9 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
 - The new hue-based Explorer loop is still not a universal quick-start after the wrap-safe hue fix. Under a cleared-smear re-screen, only `Marquee + Pulse` and `Bouncers + Pulse` stayed mobile; `Cars + Pad`, `Cars + Pulse`, `Marquee + Pad`, and `Bouncers + Pad` all converged to lockup.
-- Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening. The next candidate likely needs a different audio-feedback leg or a slightly less minimal hybrid structure, not just a hue swap.
+- Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening.
+- Replacing the Explorer loop's audio-feedback leg with amplitude-to-visual-speed also failed to broaden coverage, and the smallest hybrid test adding weak source amplitude assist to the current Explorer pair did not unlock the `Cars` or Pad-based lockups.
+- The next worthwhile step is now structural rather than parametric: add a new feedback-capable route or derived feature, because the current built-in route family is not yielding a universal Explorer quick-start.
 
 ---
 

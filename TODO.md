@@ -25,8 +25,9 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Decide whether to keep `visBrightToAudGain` as the primary feedback leg or demote it to a lockup-demo preset.
 - [x] Re-screen `Explorer loop` on `Cars`, `Marquee`, and `Bouncers` after the wrap-safe hue smoothing/mapping fix.
 - [x] Screen a different second feedback leg for the explorer quick-start; the hue pair still locks on `Cars` and on all current Pad-based cases.
-- [ ] Screen a new explorer pair that changes the audio-feedback leg as well; keeping `audCentroidToVisPos` fixed did not solve the lockup problem.
-- [ ] Consider one weak source-driven assist if the next pure two-leg reciprocal pairs remain too collapse-prone.
+- [x] Screen a new explorer pair that changes the audio-feedback leg as well; keeping `audCentroidToVisPos` fixed did not solve the lockup problem.
+- [x] Consider one weak source-driven assist if the next pure two-leg reciprocal pairs remain too collapse-prone.
+- [ ] Add one new feedback-capable route or derived analysis feature for Explorer screening; the current built-in route family is exhausted as a universal quick-start search space.
 - [ ] Choose and add a repository license before publication/archive.
 
 ## Documentation Tasks
