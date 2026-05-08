@@ -31,7 +31,8 @@ This file tracks current build status so compacted sessions can resume from repo
 - [x] Add one new feedback-capable route or derived analysis feature for Explorer screening; the new `audSpreadToVisWidth` route broadened Explorer coverage.
 - [x] Repeat Cars geometry tuning under a fresh-start reproducibility criterion. Result: no reproducible `Cars` Explorer preset emerged inside the current spread+hue family.
 - [x] Screen `Walker` against the current supported Explorer quick-start and decide whether it joins the core built-in regression set. Result: `Walker` does not join; horizontal runs locked on both Pad and Pulse, and a vertical Pulse spot-check ran away.
-- [ ] Re-tune or replace the current Explorer quick-start. Fresh-start reruns now only reproduce `Marquee + Pad` cleanly; `Marquee + Pulse` and `Bouncers + Pad` run away, `Bouncers + Pulse` did not survive a repeat, and `Walker` failed.
+- [x] Make built-in synth sources deterministic for fresh-start feedback screening. `Pad` detune modulation and `Pulse` note scheduling now reset from fixed seeds.
+- [ ] Re-tune or replace the current Explorer quick-start. The Pulse-specific tuned start now reproduces on `Marquee + Pulse`, but Pad-based and `Bouncers`-based Explorer coverage still fail the reproducibility threshold.
 - [ ] Add a small external challenge suite of uploaded video and audio clips after the built-in Explorer quick-start is reproducible on more than one reference case.
 - [ ] Revisit `Cars` only after adding a new feedback-capable route or different control surface; width-only tuning inside the current spread+hue family flips between low-spread and high-spread runaway.
 - [ ] Choose and add a repository license before publication/archive.

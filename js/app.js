@@ -109,6 +109,18 @@ function engageExplorerLoop() {
     { id: 'audSpreadToVisWidth', depth: 0.18 },
     { id: 'visHueToAudSlit', depth: 0.15 },
   ]);
+  // Pulse needs a slightly narrower, less-wet starting point if the spread leg
+  // is going to stay exploratory instead of pegging immediately.
+  if (currentSourceType === 'pulse') {
+    slitWidth.value = '0.03';
+    audioMix.value = '0.85';
+  } else {
+    slitWidth.value = '0.04';
+    audioMix.value = '1';
+  }
+  scanSpeed.value = '1';
+  audioGain.value = '0.5';
+  updateLabels();
 }
 
 panicBtn?.addEventListener('click', panicFeedback);

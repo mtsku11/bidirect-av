@@ -64,7 +64,7 @@ Sources: four procedural scenes (Cars, Bouncers, Marquee, Walker) or upload a vi
 
 ### Audio
 
-Sources: built-in **Pad** synth (drone, ideal for hearing slit-scan sustain), **Pulse** synth (random short notes — good for showing the smear capture frame-by-frame), **Movie** (routes the uploaded video's own audio track through the spectral slit-scan), or **Upload audio** (any audio file).
+Sources: built-in **Pad** synth (drone, ideal for hearing slit-scan sustain), **Pulse** synth (short-note probe source, now seeded for repeatable fresh starts), **Movie** (routes the uploaded video's own audio track through the spectral slit-scan), or **Upload audio** (any audio file).
 
 Master controls output gain. Dry/wet blends the original input signal with the slit-scanned output.
 
@@ -85,7 +85,7 @@ Each row is a routing from an analyzed feature to a target parameter. The depth 
 
 ### Feedback safety
 
-Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button uses the current best spread pair: audio feedback spread to visual slit width at depth `0.18`, plus visual feedback hue to audio slit position at depth `0.15`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
+Feedback-routed depths are capped at `0.30`, ramp in over approximately 5 seconds, and pass through a small attenuation stage before modulation. The **Explorer loop** button uses the current best spread pair: audio feedback spread to visual slit width at depth `0.18`, plus visual feedback hue to audio slit position at depth `0.15`. That hue path uses circular smoothing and wrap-safe folding before it hits the linear slit-position control. When the current audio source is **Pulse**, the quick-start also narrows the base slit to `0.03` and lowers dry/wet to `0.85`, which is the first Pulse-start that reproduced cleanly under fresh-start reruns. The **Lockup loop** button preserves the original bounded pair: audio feedback centroid to visual slit position plus visual feedback brightness to audio gain, both at depth `0.20`. The **Panic** button zeroes all currently feedback-routed depths.
 
 ---
 
@@ -228,11 +228,11 @@ Uploaded movie and audio files are not serialized, so shared hashes remain struc
 
 - Phone CPUs may chug at 1280×720 with audio enabled. Drop visual resolution to 640×480 if FPS drops.
 - iPhone HEVC video files often fail to decode in browser. Re-encode or change capture format.
-- The Pulse source has no fixed seed, so identical settings won't reproduce identical sound across sessions.
+- Built-in synth sources now reset from fixed seeds, which makes fresh-start regression screens much more meaningful, but uploaded media still varies with the asset itself.
 - Onset detection is intentionally crude (single-band spectral flux). It triggers reliably on percussive material but may miss soft attacks. A proper onset detector would whiten the spectrum and adapt the threshold over time.
 - Uploaded movie and audio files are not serialized into presets, so media-backed sessions still require manual re-selection after hash or slot reload.
 - The original brightness-to-gain feedback pair still trends toward lockup across the tested built-in Cars, Bouncers, and Marquee scenes with both Pad and Pulse. It is now treated as a bounded feedback demo rather than the exploratory default.
-- The current spread+hue Explorer loop is still not universal. Fresh-start reruns on 2026-05-08 narrowed the currently reproducible built-in reference case to `Marquee + Pad`. `Marquee + Pulse` and `Bouncers + Pad` ran away, `Bouncers + Pulse` failed its repeat, `Walker` failed, and `Cars` remains outside the supported Explorer family: narrower widths collapse feedback spread to `0.00`, while a wider `0.12` slit pegs spread at `0.98`.
+- The current spread+hue Explorer loop is still not universal. After making the built-in synth sources deterministic and adding a Pulse-specific start point, `Marquee + Pulse` now reproduces cleanly under fresh starts, but Pad-based and `Bouncers`-based Explorer coverage still need more tuning. `Walker` remains outside the regression set, and `Cars` remains outside the supported Explorer family: narrower widths collapse feedback spread to `0.00`, while a wider `0.12` slit pegs spread at `0.98`.
 - Lower-depth motion and brightness replacements for the Explorer loop's second feedback leg also failed in representative screening.
 - Replacing the Explorer loop's audio-feedback leg with amplitude-to-visual-speed also failed to broaden coverage, and the smallest hybrid test adding weak source amplitude assist to the current Explorer pair did not unlock the `Cars` or Pad-based lockups.
 - Adding the new `spread -> slit width` route materially improved the Explorer family, but `Cars` still does not yield a reproducible Explorer preset inside the current spread+hue route family. Revisit it only after adding a new feedback-capable route or different control surface.

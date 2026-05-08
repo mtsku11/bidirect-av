@@ -2,7 +2,7 @@
 
 Curated preset hashes captured from the current browser instrument. Append any hash below to `slitscan-av.html` or the hosted instrument URL.
 
-Pulse-based presets remain structurally reproducible rather than sonically identical because the current Pulse source is not seeded.
+Built-in Pulse presets now reset from a fixed seed, so fresh-start reruns are much more meaningful than in the earlier screens.
 
 ## Reference presets
 
@@ -30,11 +30,11 @@ These presets use the current exploratory quick-start pair:
 - `visHueToAudSlit`: feedback tap, depth `0.15`
 - All other routes: depth `0`
 
-The added spread route broadened Explorer coverage on 2026-05-08, but fresh-start reruns later that day narrowed the currently reproducible built-in reference case to `Marquee + Pad`. `Marquee + Pulse` and `Bouncers + Pad` now run away, `Bouncers + Pulse` does not survive a repeat, `Walker` fails, and `Cars` remains outside this route family. See `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md` and `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`.
+The added spread route broadened Explorer coverage on 2026-05-08, but fresh-start reruns later that day narrowed the reproducible built-in set sharply. After fixing built-in source determinism and adding a Pulse-specific start point, `Marquee + Pulse` is the current verified Explorer reference. Pad-based and `Bouncers`-based coverage still need more work. See `test-sessions/2026-05-08-cars-fresh-start-repro-screen.md`, `test-sessions/2026-05-08-explorer-revalidation-and-walker-screen.md`, and `test-sessions/2026-05-08-deterministic-sources-and-pulse-retune.md`.
 
 ### `explorer-spread-marquee-pad`
 
-Current reproducible built-in Explorer reference case under fresh-start reruns.
+Historical Explorer capture. Fresh-start reruns after the deterministic-source fix did not keep Pad-based coverage stable enough to treat this as a current reference.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJtYXJxdWVlIn0sImF1ZGlvU291cmNlIjoicGFkIiwiY29udHJvbHMiOnsic2xpdENlbnRlciI6MC41LCJzbGl0V2lkdGgiOjAuMDQsInNjYW5TcGVlZCI6MSwiYXVkaW9HYWluIjowLjUsImF1ZGlvTWl4IjoxLCJyZXNvbHV0aW9uIjoiNjQwLDQ4MCIsImF4aXMiOiJoIn0sInJvdXRlcyI6W3siaWQiOiJhdWRBbXBUb1Zpc1NwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRDZW50cm9pZFRvVmlzUG9zIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJhdWRPbnNldFRvVmlzQ2xlYXIiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZFNwcmVhZFRvVmlzV2lkdGgiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE4fSx7ImlkIjoidmlzTW90aW9uVG9BdWRTcGVlZCIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoidmlzQnJpZ2h0VG9BdWRHYWluIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNIdWVUb0F1ZFNsaXQiLCJ0YXAiOiJmZWVkYmFjayIsImRlcHRoIjowLjE1fV19
@@ -42,10 +42,18 @@ Current reproducible built-in Explorer reference case under fresh-start reruns.
 
 ### `explorer-spread-marquee-pulse`
 
-Historical Explorer capture. Fresh-start reruns on 2026-05-08 flipped this case to runaway, so do not treat it as a current supported reference.
+Historical Explorer capture from the pre-deterministic Pulse source. The current quick-start now uses a narrower, less-wet Pulse start instead.
 
 ```text
 #preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJtYXJxdWVlIn0sImF1ZGlvU291cmNlIjoicHVsc2UiLCJjb250cm9scyI6eyJzbGl0Q2VudGVyIjowLjUsInNsaXRXaWR0aCI6MC4wNCwic2NhblNwZWVkIjoxLCJhdWRpb0dhaW4iOjAuNSwiYXVkaW9NaXgiOjEsInJlc29sdXRpb24iOiI2NDAsNDgwIiwiYXhpcyI6ImgifSwicm91dGVzIjpbeyJpZCI6ImF1ZEFtcFRvVmlzU3BlZWQiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZENlbnRyb2lkVG9WaXNQb3MiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZE9uc2V0VG9WaXNDbGVhciIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoiYXVkU3ByZWFkVG9WaXNXaWR0aCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTh9LHsiaWQiOiJ2aXNNb3Rpb25Ub0F1ZFNwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNCcmlnaHRUb0F1ZEdhaW4iLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6InZpc0h1ZVRvQXVkU2xpdCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTV9XX0
+```
+
+### `explorer-spread-marquee-pulse-seeded`
+
+Current verified Explorer reference after the deterministic-source fix and the Pulse-specific quick-start tuning.
+
+```text
+#preset=eyJ2ZXJzaW9uIjoxLCJ2aXN1YWxTb3VyY2UiOnsibW9kZSI6InNjZW5lIiwic2NlbmUiOiJtYXJxdWVlIn0sImF1ZGlvU291cmNlIjoicHVsc2UiLCJjb250cm9scyI6eyJzbGl0Q2VudGVyIjowLjUsInNsaXRXaWR0aCI6MC4wMywic2NhblNwZWVkIjoxLCJhdWRpb0dhaW4iOjAuNSwiYXVkaW9NaXgiOjAuODUsInJlc29sdXRpb24iOiI2NDAsNDgwIiwiYXhpcyI6ImgifSwicm91dGVzIjpbeyJpZCI6ImF1ZEFtcFRvVmlzU3BlZWQiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZENlbnRyb2lkVG9WaXNQb3MiLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6ImF1ZE9uc2V0VG9WaXNDbGVhciIsInRhcCI6InNvdXJjZSIsImRlcHRoIjowfSx7ImlkIjoiYXVkU3ByZWFkVG9WaXNXaWR0aCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTh9LHsiaWQiOiJ2aXNNb3Rpb25Ub0F1ZFNwZWVkIiwidGFwIjoic291cmNlIiwiZGVwdGgiOjB9LHsiaWQiOiJ2aXNCcmlnaHRUb0F1ZEdhaW4iLCJ0YXAiOiJzb3VyY2UiLCJkZXB0aCI6MH0seyJpZCI6InZpc0h1ZVRvQXVkU2xpdCIsInRhcCI6ImZlZWRiYWNrIiwiZGVwdGgiOjAuMTV9XX0
 ```
 
 ### `explorer-spread-bouncers-pad`

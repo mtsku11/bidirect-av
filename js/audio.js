@@ -21,6 +21,19 @@ let lastVizData = null;
 const FFT_SIZE = 2048;
 const NUM_BINS = FFT_SIZE / 2 + 1;
 const F_MIN = 80, F_MAX = 12000;
+const PAD_SOURCE_SEED = 0x50414431;
+const PULSE_SOURCE_SEED = 0x50554c31;
+
+function createSeededRng(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 function sliderToBin(v, sampleRate) {
   const hz = F_MIN * Math.pow(F_MAX / F_MIN, clamp01(v));
@@ -128,6 +141,7 @@ function buildSource(kind) {
   if (kind === 'pad') {
     const root = 110;
     const ratios = [1, 6/5, 3/2, 9/4];
+    const rng = createSeededRng(PAD_SOURCE_SEED);
     const out = headGain;
     out.gain.value = 0.5;
     const filt = audioCtx.createBiquadFilter();
@@ -140,8 +154,10 @@ function buildSource(kind) {
       const o = audioCtx.createOscillator();
       o.type = 'sawtooth'; o.frequency.value = root * r;
       const detuneLfo = audioCtx.createOscillator();
-      detuneLfo.type = 'sine'; detuneLfo.frequency.value = 0.2 + Math.random()*0.4;
-      const detGain = audioCtx.createGain(); detGain.gain.value = 6 + Math.random()*8;
+      detuneLfo.type = 'sine';
+      detuneLfo.frequency.value = 0.2 + rng() * 0.4;
+      const detGain = audioCtx.createGain();
+      detGain.gain.value = 6 + rng() * 8;
       detuneLfo.connect(detGain).connect(o.detune); detuneLfo.start();
       const og = audioCtx.createGain(); og.gain.value = 0.2;
       o.connect(og).connect(filt); o.start();
@@ -151,6 +167,7 @@ function buildSource(kind) {
     currentSource = out;
     currentSource._cleanup = () => oscs.forEach(o => { try { o.stop(); } catch(e){} });
   } else if (kind === 'pulse') {
+    const rng = createSeededRng(PULSE_SOURCE_SEED);
     const out = headGain; out.gain.value = 0.6;
     const filt = audioCtx.createBiquadFilter();
     filt.type = 'lowpass'; filt.frequency.value = 3000; filt.Q.value = 0.7;
@@ -162,7 +179,7 @@ function buildSource(kind) {
       const now = audioCtx.currentTime;
       while (scheduledUntil < now + 0.5) {
         const t = scheduledUntil;
-        const f = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.3 ? 2 : 1);
+        const f = scale[Math.floor(rng() * scale.length)] * (rng() < 0.3 ? 2 : 1);
         const o = audioCtx.createOscillator();
         o.type = 'triangle'; o.frequency.value = f;
         const g = audioCtx.createGain();
@@ -308,4 +325,3 @@ function analyzeAudio() {
   analyzeAudioAnalyser(preAnalyser, preAnalyserData, preAnalyserPrev, analysisTaps.source.audio, 'source');
   analyzeAudioAnalyser(postAnalyser, postAnalyserData, postAnalyserPrev, analysisTaps.feedback.audio, 'feedback');
 }
-
